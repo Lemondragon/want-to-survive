@@ -1,0 +1,23 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Prefabs\Projectiles\Bullet.cs">
+    <Files>
+      <File FileName="Assets\Prefabs\Characters\Player\Player\PlayerMotor.cs" Line="860" Column="25" />
+      <File FileName="Assets\Network_and_Core\TerrainGenerator.cs" Line="1" Column="1" />
+      <File FileName="Assets\Network_and_Core\GameManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Network_and_Core\NetworkManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Prefabs\Structures\Generated\Ceilling.cs" Line="1" Column="1" />
+      <File FileName="Assets\Prefabs\Characters\Zombies\Zombie.cs" Line="1" Column="1" />
+      <File FileName="Assets\Prefabs\Characters\Player\Skills\SkillTree.cs" Line="1" Column="1" />
+      <File FileName="Assets\Prefabs\Projectiles\MeleeImpact.cs" Line="1" Column="1" />
+      <File FileName="Assets\Prefabs\Projectiles\Projectile.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Health\Health.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Health\Life.cs" Line="1" Column="1" />
+      <File FileName="Assets\Prefabs\Projectiles\Bullet.cs" Line="16" Column="37" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

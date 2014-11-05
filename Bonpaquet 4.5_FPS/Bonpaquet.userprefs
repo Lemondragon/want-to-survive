@@ -1,0 +1,17 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Prefabs\Projectiles\Projectile.cs">
+    <Files>
+      <File FileName="Assets\Prefabs\Items\Scripts\NewItemSystem\Abstracts\Weapon.cs" Line="9" Column="36" />
+      <File FileName="Assets\Prefabs\Characters\Player\Player\RealTimeColor.cs" Line="11" Column="4" />
+      <File FileName="Assets\Prefabs\Characters\Player\Skills\Skill.cs" Line="66" Column="41" />
+      <File FileName="Assets\Prefabs\Items\Scripts\NewItemSystem\FireArm_Clip.cs" Line="32" Column="41" />
+      <File FileName="Assets\Prefabs\Characters\Player\Player\PlayerMotor.cs" Line="862" Column="14" />
+      <File FileName="Assets\Prefabs\Projectiles\Projectile.cs" Line="21" Column="4" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
