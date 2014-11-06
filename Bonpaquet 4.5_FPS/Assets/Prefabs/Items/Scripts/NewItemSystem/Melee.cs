@@ -3,17 +3,22 @@ using System.Collections;
 
 public class Melee : Weapon 
 {
-	private GameObject m_MeleeImpact; 
+	private bool m_isDangerous = false;
 	public enum MeleeStyle {Stab,Slash};
 	public MeleeStyle m_MeleeStyle = MeleeStyle.Stab; 
+
+	public override void AfterUpdate ()
+	{
+		if(this.m_isDangerous)
+		{
+			this.isDangerous();
+		}
+	}
 	
+
 	public override void OnReady ()
 	{
-		if(this.m_MeleeImpact!=null)
-		{
-			Network.Destroy(this.m_MeleeImpact);
-			this.m_MeleeImpact=null;
-		}
+		this.m_isDangerous = false;
 	}
 	
 	public override void Trigger ()
@@ -34,17 +39,8 @@ public class Melee : Weapon
 				this.m_Master.networkView.RPC("PlayHandAction",RPCMode.All,this.m_HeldByHand,"hand_Slash");
 				break;
 			}
+			this.m_isDangerous=true;
 		}
-		GameObject clone = (GameObject)Network.Instantiate(this.m_ImpactPrefab,this.m_Tip.position,this.transform.rotation,0);
-		clone.transform.parent=this.transform;
-		this.m_MeleeImpact=clone;
-		Projectile ss = (Projectile)clone.GetComponent(typeof(Projectile));
-		ss.m_Origin=this;
-		float multiplier = this.m_Master.getBonusMultiplier(Bonus.BonusType.MeleeDamage)-1;
-		if(this.m_IsTwoHanded){multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.BothHandsMeleeDamage)-1;}
-		
-		ss.m_BleedDamage=this.m_Power*this.m_BleedRatio*(this.m_Master.getBonusMultiplier(Bonus.BonusType.MeleeBleedDamage)+multiplier);
-		ss.m_CommotionDamage=(1-this.m_BleedRatio)*this.m_Power*(this.m_Master.getBonusMultiplier(Bonus.BonusType.MeleeCommotionDamage)+multiplier);
 	}
 	
 	public override void OnStartCharge ()
@@ -83,6 +79,29 @@ public class Melee : Weapon
 		else if (health is PlayerMotor)
 		{
 			this.m_Master.gainFocusExp(Focus.Melee,p_Power);
+		}
+	}
+
+	private void isDangerous()
+	{
+		Debug.Log("SLICE");
+		RaycastHit hitInfo;
+		if(Physics.Raycast(this.transform.position,this.transform.TransformDirection(Vector3.up),out hitInfo,Vector3.Distance(this.transform.position,this.m_Tip.position)))
+		{
+			Health colHealth = hitInfo.collider.GetComponent<Health>();
+			if(colHealth!=null)
+			{
+				float multiplier = this.m_Master.getBonusMultiplier(Bonus.BonusType.MeleeDamage)-1;
+				if(this.m_IsTwoHanded){multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.BothHandsMeleeDamage)-1;}
+
+				float bleedDamage = this.m_Power*this.m_BleedRatio*(this.m_Master.getBonusMultiplier(Bonus.BonusType.MeleeBleedDamage)+multiplier);
+				float commoDamage = (1-this.m_BleedRatio)*this.m_Power*(this.m_Master.getBonusMultiplier(Bonus.BonusType.MeleeCommotionDamage)+multiplier);
+				colHealth.networkView.RPC("AddBleed",RPCMode.AllBuffered,bleedDamage,this.networkView.viewID);
+				colHealth.networkView.RPC("AddCommotion",RPCMode.AllBuffered,commoDamage,this.networkView.viewID);
+				this.onHit(colHealth.gameObject,bleedDamage+commoDamage);
+				this.m_isDangerous=false;
+				Debug.Log("HIT "+colHealth.name);
+			}
 		}
 	}
 }

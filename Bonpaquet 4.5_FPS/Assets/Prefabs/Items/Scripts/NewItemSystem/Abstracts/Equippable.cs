@@ -78,7 +78,10 @@ public abstract class Equippable : Item {
 				}
 			}
 		}
+		this.AfterUpdate();
 	}
+	public virtual void AfterUpdate(){}
+
 	override public void Start ()
 	{	
 		this.m_PossibleActionNames.Add("Equip");

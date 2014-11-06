@@ -50,6 +50,7 @@
      <Compile Include="Assets\Editor\HouseBuilderWindow.cs" />
      <Compile Include="Assets\Editor\HouseEditor.cs" />
      <None Include="Assets\Standard Assets\Projectors\Guidelines.txt" />
+     <None Include="Assets\Standard Assets\Skyboxes\_skybox info.txt" />
      <None Include="Assets\Standard Assets\Projectors\Sources\Shaders\Projector Multiply.shader" />
  <Reference Include="Assembly-UnityScript-firstpass">
  <HintPath>F:/GitHub/want-to-survive/Bonpaquet 4.5_FPS/Library/ScriptAssemblies/Assembly-UnityScript-firstpass.dll</HintPath>

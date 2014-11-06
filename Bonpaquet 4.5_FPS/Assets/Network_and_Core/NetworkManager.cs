@@ -7,7 +7,6 @@ public class NetworkManager : MonoBehaviour
 	const float CAM_DISTANCE = 8;
 	//Refs
 	public GameObject m_PlayerPrefab;//Player Default Prefab.
-	public GameObject m_PlayerCamPrefab;//Player's cam Default Prefab.
 	public GameObject m_GameManagerPrefab;//Default GameManager Prefab.
 	public GameObject[] m_TestSpawn; //Objets to spawn at map's center for testing purposes
 	public Dictionary<NetworkPlayer,PlayerInfos> m_PlayerInfos = new Dictionary<NetworkPlayer, PlayerInfos>();//Dictionnary linking a NetworkPlayer to his PlayerInfo, should be synchonized on all connections.
@@ -219,7 +218,6 @@ public class NetworkManager : MonoBehaviour
 			GameObject[] spawns = GameObject.FindGameObjectsWithTag("Spawn");
 			Transform spawn = spawns[(int)Mathf.Floor(spawns.Length*Random.value)].transform;
 			GameObject playerObject = (GameObject)Network.Instantiate(this.m_PlayerPrefab,spawn.position,spawn.rotation,0);
-			GameObject cam = (GameObject)Instantiate(this.m_PlayerCamPrefab,spawn.position+new Vector3(0,CAM_DISTANCE,0),Quaternion.Euler(90,0,0));
 			if(Network.isServer) //Le serveur fait apparaitre les objets de départ à des fins de test.
 			{
 				int spnOffset = 0;
@@ -230,10 +228,7 @@ public class NetworkManager : MonoBehaviour
 				}
 			}
 			//On assigne les références possibles grâce à la création de ce nouveau joueur.
-			PlayerMotor playerMotor=playerObject.GetComponent<PlayerMotor>();
-			playerMotor.m_Cam=cam.camera;
-			CamScript camScript = cam.GetComponent<CamScript>();
-			camScript.target=playerObject.transform;
+			PlayerMotor playerMotor=playerObject.GetComponent<PlayerMotor>();;
 			this.m_MyPlayer=playerObject;
 			//Signifie l'apparition de ce nouveau joueur.
 			EV.gameManager.networkView.RPC("RPC_NewPlayer",RPCMode.All,playerObject.networkView.viewID,p_Player);
@@ -316,7 +311,6 @@ public class NetworkManager : MonoBehaviour
 	{
 		this.m_PlayerInfos.Clear();
 		this.m_PlayerPrefab=null;
-		this.m_PlayerCamPrefab=null;
 		if(EV.gameManager!=null)
 		{
 			Destroy(EV.gameManager.gameObject);

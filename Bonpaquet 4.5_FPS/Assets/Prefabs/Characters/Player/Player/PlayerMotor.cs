@@ -224,7 +224,7 @@ public class PlayerMotor : Life
 			{
 				this.TakeBullet(EV.AmmoType.Arrow,(byte)(UnityEngine.Random.value*100));
 			}
-
+			Screen.showCursor=false;
 		}
 	}
 	
@@ -272,7 +272,10 @@ public class PlayerMotor : Life
 			//Obtiens les commandes directionelles.
 			float  i_horizontal = Input.GetAxis("Horizontal");
 			float i_vertical = Input.GetAxis("Vertical");
-			Vector3 moveDirection = new Vector3 (i_horizontal,0,i_vertical).normalized;
+			Vector3 moveDirection = new Vector3 (-i_horizontal,0,-i_vertical).normalized;
+			moveDirection = this.transform.TransformDirection(moveDirection);
+			moveDirection.y=0;
+
 
 			//Gestion de la course
 			float speed = this.getWalkSpeed();
@@ -354,6 +357,8 @@ public class PlayerMotor : Life
 				this.m_SelectedItem=null;
 				this.m_ContextualMenuPos.x=-1;
 				this.m_ShowInventory=!this.m_ShowInventory;
+				Screen.showCursor=this.m_ShowInventory;
+				this.GetComponent<MouseLook>().enabled=!this.m_ShowInventory;
 			}
 		}
 		//Clics Effects
@@ -576,9 +581,9 @@ public class PlayerMotor : Life
 		if(this.networkView.isMine)
 		{
 			//position cursor - looking at cursor
-			Event e = Event.current;
-			Vector3 cursor = m_Cam.ScreenToWorldPoint(new Vector3 (Screen.width-e.mousePosition.x,e.mousePosition.y,m_Cam.transform.position.y-this.transform.position.y));
-			this.transform.LookAt(cursor);
+			//Event e = Event.current;
+			//Vector3 cursor = m_Cam.ScreenToWorldPoint(new Vector3 (Screen.width-e.mousePosition.x,e.mousePosition.y,m_Cam.transform.position.y-this.transform.position.y));
+			//this.transform.LookAt(cursor);
 			//OverLay
 			GUI.DrawTexture(EV.relativeRect(0,0,160,90),this.m_Vignette);
 			//Inventaire
@@ -687,7 +692,7 @@ public class PlayerMotor : Life
 								}
 								for(int j = 0;j<4;j++)
 								{
-									if(Input.GetButtonDown("QuickSlot"+(j+1)))
+									if(Input.GetButtonDown("QuickSlot_"+(j)))
 									{
 										this.m_QuickSlots[j]=new QuickSlot(this.m_SelectedItem,(byte)i);
 									}
@@ -718,6 +723,10 @@ public class PlayerMotor : Life
 					GUI.color=EV.QualityColor(m_SelectedItem.m_ItemQuality);
 					GUI.Label(new Rect(Event.current.mousePosition.x+10,Event.current.mousePosition.y,300,20),m_SelectedItem.m_ItemName);
 				}
+			}
+			else
+			{
+				GUI.DrawTexture(EV.relativeRect(79,44,2,2),this.m_TextureEquipCadre);
 			}
 			//Current Action
 			if(this.m_ActionCompletion!=-1)

@@ -9,34 +9,42 @@ public abstract class FireArm : Weapon
 	public float m_ReloadSpeed = 5;//Temps de recharche (le temps de décharge est la moitié de lui.).
 	public int m_BulletPerShot = 1;//Nombre de balles propulsés par coup (Par munition, comme dans le cas d'un fusil à pompe).
 	public float m_GeneratedThreatOnFire = 0f;
+	public float m_Range = 100;
 	
 	public void Fire(byte p_Bullet)
 	{
 		//Shooting
 		this.m_Master.gainFocusExp(Focus.Firearms,this.m_Power/5);
+		Network.Instantiate(this.m_FxShotBurst,this.m_Tip.position,this.transform.rotation,0);
 		for(int i = 0;i<this.m_BulletPerShot;i++)
 		{
-			Network.Instantiate(this.m_FxShotBurst,this.m_Tip.position,this.transform.rotation,0);
-			GameObject clone = (GameObject)Network.Instantiate(this.m_ImpactPrefab,this.m_Tip.position,this.transform.rotation,0);
-			clone.transform.rotation=this.transform.rotation*Quaternion.Euler(new Vector3(0,0,(float)(Random.value-0.5)*(this.m_Angle+this.m_Master.m_Fear)));
-			Projectile ss = (Projectile)clone.GetComponent(typeof(Projectile));
-			ss.m_Origin=this;
-			float multiplier = this.m_Master.getBonusMultiplier(Bonus.BonusType.FireArmDamage);
-			switch(this.m_AmmoType)
+			RaycastHit hitInfo;
+			if(Physics.Raycast(this.m_Master.transform.position,this.m_Master.transform.TransformDirection(Vector3.back),out hitInfo,m_Range))
 			{
-			case EV.AmmoType.Arrow:
-				multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.ArrowDamage)-1;break;
-			case EV.AmmoType.Pistol:
-				multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.PistolDamage)-1;break;
-			case EV.AmmoType.Rifle:
-				multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.RifleDamage)-1;break;
-			case EV.AmmoType.Shotgun:
-				multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.ShotgunDamage)-1;break;
+				Health colHealth = hitInfo.collider.GetComponent<Health>();
+				if(colHealth!=null)
+				{
+					float multiplier = this.m_Master.getBonusMultiplier(Bonus.BonusType.FireArmDamage);
+					switch(this.m_AmmoType)
+					{
+					case EV.AmmoType.Arrow:
+						multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.ArrowDamage)-1;break;
+					case EV.AmmoType.Pistol:
+						multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.PistolDamage)-1;break;
+					case EV.AmmoType.Rifle:
+						multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.RifleDamage)-1;break;
+					case EV.AmmoType.Shotgun:
+						multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.ShotgunDamage)-1;break;
+					}
+					float bleedDamage = this.m_Power*this.m_BleedRatio*p_Bullet/75*multiplier;
+					float commoDamage = (1-this.m_BleedRatio)*this.m_Power*p_Bullet/75*multiplier;
+					colHealth.networkView.RPC("AddBleed",RPCMode.AllBuffered,bleedDamage,this.networkView.viewID);
+					colHealth.networkView.RPC("AddCommotion",RPCMode.AllBuffered,commoDamage,this.networkView.viewID);
+					this.onHit(colHealth.gameObject,bleedDamage+commoDamage);
+				}
 			}
-			ss.m_BleedDamage=this.m_Power*this.m_BleedRatio*p_Bullet/75*multiplier;
-			ss.m_CommotionDamage=(1-this.m_BleedRatio)*this.m_Power*p_Bullet/75*multiplier;
-			this.m_Master.InteruptAction();
 		}
+		this.m_Master.InteruptAction();
 		this.m_Master.networkView.RPC("PlayHandAction",RPCMode.All,this.m_HeldByHand,"hand_Recoil");
 		if(this.m_IsTwoHanded)
 		{
