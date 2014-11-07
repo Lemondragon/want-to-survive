@@ -30,8 +30,16 @@ public class Builder : Item {
 		{
 			if(!this.m_LockBuildPos)
 			{
-				Vector3 DirectPos =this.m_Master.transform.position-(this.m_Master.transform.forward*2);
-				this.m_ShownCube.transform.position=new Vector3(Mathf.Round(DirectPos.x),DirectPos.y,Mathf.Round(DirectPos.z));
+				Vector3 directPos;
+				if(this.m_Master.m_CursorHasHit)
+				{
+					directPos =this.m_Master.m_CursorHit.point;
+				}
+				else
+				{
+					directPos =this.m_Master.m_Cursor.position+this.m_Master.m_Cursor.TransformDirection(Vector3.forward*1);
+				}
+				this.m_ShownCube.transform.position=new Vector3(Mathf.Round(directPos.x),1,Mathf.Round(directPos.z));
 			}
 			if(Input.GetMouseButtonDown(1))
 			{

@@ -228,7 +228,6 @@ public class NetworkManager : MonoBehaviour
 				}
 			}
 			//On assigne les références possibles grâce à la création de ce nouveau joueur.
-			PlayerMotor playerMotor=playerObject.GetComponent<PlayerMotor>();;
 			this.m_MyPlayer=playerObject;
 			//Signifie l'apparition de ce nouveau joueur.
 			EV.gameManager.networkView.RPC("RPC_NewPlayer",RPCMode.All,playerObject.networkView.viewID,p_Player);

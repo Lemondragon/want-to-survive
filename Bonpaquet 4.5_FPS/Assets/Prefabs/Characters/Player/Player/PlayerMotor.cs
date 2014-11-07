@@ -12,11 +12,14 @@ public class PlayerMotor : Life
 	const float WALK_THREAT_GAIN = 5;//Per second
 	const float COWARD_THREAT_THRESOLD = 50; //Maximum threat to gain Coward Exp;
 	const float COWARD_FOCUS_GAIN = 2; //Coward focus gain at 0 Threat per second.
+	const float INTERACT_RANGE = 1; //Range from privot where you can inteacte with objects.
 	
-	
+	public RaycastHit m_CursorHit;
+	public bool m_CursorHasHit;
 	[HideInInspector] public NetworkPlayer m_AssociatedPlayer; //Joueur du réseau se servent de l'objet comme avatar.
 	[HideInInspector]public Camera m_Cam; //Camera observant cet objet.
 	public GameObject m_Body; //Objet visuel contenant les animations.
+	public Transform m_Cursor;//Objet qui détermine ou le crusor est.
 	public float[] m_Test; //Liste temporaire afin d'ajuster des paramètres en temps réel ###TEMPORAIRE###
 	public Item[] m_Inventory;//Inventaire du joueur.
 	public int[] m_InventoryGUI; //Mesures pour l'affichage de l'inventaire.
@@ -29,8 +32,7 @@ public class PlayerMotor : Life
 	//Contextual Action
 	private string m_ContextualActionName = ""; //Nom de l'action contextuelle à afficher.
 	private Color m_ContextualActionColor;//Couleur de l'action contextuelle à afficher.
-	private ArrayList m_InteractiveObjects = new ArrayList(); //Liste de tous les objets interactifs à portée, en ordre de rencontre.
-	
+
 	//Fear
 	[HideInInspector]public float m_Fear = 0f; //Quantitée de peur affectant le joueur.
 	private float m_BaseFear = 0f; //Quantité de peur cummulée.
@@ -72,6 +74,7 @@ public class PlayerMotor : Life
 	private SkillTree m_SkillTree;
 	
 	private Vector2 m_LastMousePos; 
+
 	
 	//Stats
 	[HideInInspector]public int[] m_Bonuses = new int[Bonus.getLength()];
@@ -216,7 +219,6 @@ public class PlayerMotor : Life
 			this.m_BulletSupplies.Add(EV.AmmoType.Rifle,new BulletSupplies());
 			this.m_BulletSupplies.Add(EV.AmmoType.Shotgun,new BulletSupplies());
 			this.m_BulletSupplies.Add(EV.AmmoType.Arrow,new BulletSupplies());
-			this.m_InteractiveObjects= new ArrayList(); 
 			
 			this.InteruptAction();
 			//##TEMP
@@ -327,7 +329,7 @@ public class PlayerMotor : Life
 			}
 			//Gestion hiéarchique des Triggers
 			//Si on est en contact avec au moins un objet interactif.
-			if(this.m_InteractiveObjects.Count>0)
+			/*if(this.m_InteractiveObjects.Count>0)
 			{
 				//On traite le premier objet de la liste.
 				Collider interactiveObject = (Collider)this.m_InteractiveObjects[0];
@@ -351,7 +353,8 @@ public class PlayerMotor : Life
 			else
 			{
 				m_ContextualActionName="";
-			}
+			}*/
+			this.CursorInteraction();
 			if (Input.GetButtonDown("Inventory"))
 			{
 				this.m_SelectedItem=null;
@@ -381,23 +384,7 @@ public class PlayerMotor : Life
 		}
 		base.OnLive();
 	}
-	
-	void OnTriggerEnter(Collider p_collider)
-	{
-		if (p_collider.CompareTag("Pickup"))
-		{
-			this.m_InteractiveObjects.Add(p_collider);
-		}
-	}
-	
-	void OnTriggerExit(Collider p_collider)
-	{
-		if (p_collider.CompareTag("Pickup"))
-		{
-			this.m_InteractiveObjects.Remove(p_collider);
-		}
-	}
-	
+
 	public bool TakeItem (Item p_Item)
 	{
 		bool got = false;
@@ -745,7 +732,7 @@ public class PlayerMotor : Life
 			if (this.m_ContextualActionName!="")
 			{
 				GUI.color=m_ContextualActionColor;
-				GUI.Label(new Rect (80*EV.guiPixel,50*EV.guiPixel,200,20),this.m_ContextualActionName);
+				GUI.Label(EV.relativeRect(80,50,10,3),this.m_ContextualActionName);
 			}
 			//BuildCancelButton
 			if(this.m_IsBuilding)
@@ -797,6 +784,27 @@ public class PlayerMotor : Life
 			this.networkView.RPC("RPC_GenerateThreat",RPCMode.All,this.m_UnsentThreat);
 			this.m_UnsentThreat=0;
 		}
+	}
+	private void CursorInteraction()
+	{
+
+		this.m_ContextualActionName = "";
+		this.m_CursorHasHit = Physics.Raycast(this.m_Cursor.position,this.m_Cursor.TransformDirection(Vector3.forward),out this.m_CursorHit,INTERACT_RANGE);
+		if(this.m_CursorHasHit)
+		{
+			Item item = this.m_CursorHit.transform.GetComponent<Item>();
+			if(item!=null)
+			{
+				//On affiche l'option de le prendre.
+				this.m_ContextualActionName = "Take "+item.m_ItemName;
+				this.m_ContextualActionColor= EV.QualityColor(item.m_ItemQuality);
+				if(Input.GetButtonDown("Action"))
+				{
+					this.TakeItem(item);
+				}
+			}
+		}
+		
 	}
 	
 	private void drawBar(Vector2 p_Anchor,float p_Thickness, float p_Max,float p_Actual,Color p_Color)

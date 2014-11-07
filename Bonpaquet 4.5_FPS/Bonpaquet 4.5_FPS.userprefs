@@ -1,12 +1,9 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Network_and_Core\NetworkManager.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Prefabs\Items\Scripts\NewItemSystem\Builder.cs">
     <Files>
-      <File FileName="Assets\Prefabs\Items\Scripts\NewItemSystem\Abstracts\Equippable.cs" Line="82" Column="3" />
-      <File FileName="Assets\Scripts\MouseLook.cs" Line="63" Column="2" />
-      <File FileName="Assets\Prefabs\Characters\Player\Player\PlayerMotor.cs" Line="725" Column="6" />
-      <File FileName="Assets\Prefabs\Items\Scripts\NewItemSystem\Abstracts\FireArm.cs" Line="12" Column="27" />
-      <File FileName="Assets\Network_and_Core\NetworkManager.cs" Line="318" Column="33" />
+      <File FileName="Assets\Prefabs\Items\Scripts\NewItemSystem\Builder.cs" Line="40" Column="49" />
+      <File FileName="Assets\Prefabs\Characters\Player\Player\PlayerMotor.cs" Line="793" Column="26" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

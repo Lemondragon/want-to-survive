@@ -19,7 +19,7 @@ public abstract class FireArm : Weapon
 		for(int i = 0;i<this.m_BulletPerShot;i++)
 		{
 			RaycastHit hitInfo;
-			if(Physics.Raycast(this.m_Master.transform.position,this.m_Master.transform.TransformDirection(Vector3.back),out hitInfo,m_Range))
+			if(Physics.Raycast(this.m_Master.m_Cursor.position,this.m_Master.m_Cursor.TransformDirection(Vector3.forward),out hitInfo,m_Range))
 			{
 				Health colHealth = hitInfo.collider.GetComponent<Health>();
 				if(colHealth!=null)
