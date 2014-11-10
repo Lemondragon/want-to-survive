@@ -87,6 +87,7 @@
      <Compile Include="Assets\Scripts\Health\Health.cs" />
      <Compile Include="Assets\Scripts\Health\Integrity.cs" />
      <Compile Include="Assets\Scripts\Health\Life.cs" />
+     <Compile Include="Assets\Scripts\LightFlicker.cs" />
      <Compile Include="Assets\Scripts\MouseLook.cs" />
      <Compile Include="Assets\Tools\BuildHouses\TextureScaler.cs" />
      <None Include="Assets\Standard Assets\Projectors\Guidelines.txt" />
