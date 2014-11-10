@@ -6,7 +6,7 @@ public class GameManager : MonoBehaviour
 	
 	const int ZOMBIE_POS_TRIES = 10;
 	const int ZOMBIE_SPAWN_COST = 50;
-	const int ZOMBIE_SPAWN_PERIMETER = 20;
+	const int PLAYER_VIEW_ANGLE = 40;//Amount of degrees from the center of the player views that will prevent zombie spawns.
 	
 	ArrayList m_MessageList;
 	float m_MessageExpiration = 0f;
@@ -92,7 +92,11 @@ public class GameManager : MonoBehaviour
 					valid = true;
 					foreach(NetworkManager.PlayerInfos pi in EV.networkManager.m_PlayerInfos.Values)
 					{
-						valid&=(pi.m_PlayerMotor.transform.position-pos).magnitude>ZOMBIE_SPAWN_PERIMETER;
+						//valid&=(pi.m_PlayerMotor.transform.position-pos).magnitude>ZOMBIE_SPAWN_PERIMETER;
+						Transform playTrans = pi.m_PlayerMotor.transform;
+						float angle =Mathf.Abs(Vector3.Angle(playTrans.TransformDirection(Vector3.forward),playTrans.position-pos));
+						Debug.Log("TrySpawn at "+angle);
+						valid&=angle>PLAYER_VIEW_ANGLE;
 					}
 					tries++;
 				}while(!valid&&tries<ZOMBIE_POS_TRIES);
@@ -180,6 +184,8 @@ public class GameManager : MonoBehaviour
 					this.m_Sun.color = result;
 					this.m_Sun.intensity=result.grayscale/3;
 					RenderSettings.ambientLight=Color.Lerp(result,Color.black,0.5f);
+					RenderSettings.fogColor=Color.Lerp(result,Color.black,0.8f);
+					RenderSettings.skybox.SetColor("_Tint",Color.Lerp(result,Color.black,0.2f));
 					i=this.m_DayTimes.Length;
 				}
 				else
