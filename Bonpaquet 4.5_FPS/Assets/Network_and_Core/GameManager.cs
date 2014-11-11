@@ -95,7 +95,6 @@ public class GameManager : MonoBehaviour
 						//valid&=(pi.m_PlayerMotor.transform.position-pos).magnitude>ZOMBIE_SPAWN_PERIMETER;
 						Transform playTrans = pi.m_PlayerMotor.transform;
 						float angle =Mathf.Abs(Vector3.Angle(playTrans.TransformDirection(Vector3.forward),playTrans.position-pos));
-						Debug.Log("TrySpawn at "+angle);
 						valid&=angle>PLAYER_VIEW_ANGLE;
 					}
 					tries++;

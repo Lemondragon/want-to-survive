@@ -6,6 +6,7 @@ public class NetworkManager : MonoBehaviour
 {
 	const float CAM_DISTANCE = 8;
 	//Refs
+	public LobbyView m_LobbyView;
 	public GameObject m_PlayerPrefab;//Player Default Prefab.
 	public GameObject m_GameManagerPrefab;//Default GameManager Prefab.
 	public GameObject[] m_TestSpawn; //Objets to spawn at map's center for testing purposes
@@ -25,7 +26,7 @@ public class NetworkManager : MonoBehaviour
 	public string m_MyName = "Player";//Selected name of the local player.
 	
 	//Server Info
-	private string m_ServerName = "Server";//Connected's Server Name.
+	public string m_ServerName = "Server";//Connected's Server Name.
 	
 	/// <summary>
 	/// Class defining useful informations on fellow players.
@@ -69,12 +70,14 @@ public class NetworkManager : MonoBehaviour
 				this.m_HostData=MasterServer.PollHostList();
 				m_RefreshingHosts=false;
 				this.m_BusyTimer=0;
+				this.m_LobbyView.showHostList(this.m_HostData);
 			}
 			else if (this.m_BusyTimer<=Time.time)//Si on n'en trouve pas après 10 secondes.
 			{
 				this.m_ConsoleMessage="No Hosts found after 10 seconds.";
 				m_RefreshingHosts=false;
 				this.m_BusyTimer=0;
+				this.m_LobbyView.showHostList(new HostData[0]);
 			}
 		}
 		if(Input.GetButtonDown("MainMenu"))//Si on appuie sur le bouton pour afficher le menu, on le toggle on/off.
@@ -82,7 +85,26 @@ public class NetworkManager : MonoBehaviour
 			this.m_ShowMenu = !m_ShowMenu;
 		}
 	}
-	
+
+	public void disconnect()
+	{
+		if (Network.isServer)
+		{
+			MasterServer.UnregisterHost();
+		}
+		Network.Disconnect();
+	}
+
+	public void startGame()
+	{
+		EV.gameManager.InitializeNetworkLevelLoad("GrassLand");
+	}
+
+	public void kickPlayer(NetworkPlayer p_Player)
+	{
+		Network.CloseConnection(p_Player,true);
+	}
+
 	void OnGUI () 
 	{
 		if (m_IsInGame) //Lorsque en jeu, l'apport visuel du NetworkManager se limite au MainMenu.
@@ -91,11 +113,7 @@ public class NetworkManager : MonoBehaviour
 			{//MAIN MENU GUI
 				if(GUI.Button(EV.relativeRect(5,5,15,3),"Disconnect"))//Bouton pour se déconnecter du serveur.
 				{
-					if (Network.isServer)
-					{
-						MasterServer.UnregisterHost();
-					}
-					Network.Disconnect();
+					this.disconnect();
 				}
 			}
 		}
@@ -133,7 +151,7 @@ public class NetworkManager : MonoBehaviour
 						GUI.color=Color.red;
 						if(GUI.Button(EV.relativeRect(25,10+(5*counter),8,3),"Kick"))
 						{
-							Network.CloseConnection(pi.m_AssociatedPlayer,true);
+							this.kickPlayer(pi.m_AssociatedPlayer);
 						}
 					}
 					GUI.color=pi.m_Color; //La couleur du nom et celle du joueur.
@@ -152,7 +170,7 @@ public class NetworkManager : MonoBehaviour
 				{
 					if(GUI.Button(EV.relativeRect(10,30,10,3),"Start"))
 					{
-						EV.gameManager.InitializeNetworkLevelLoad("GrassLand");
+						this.startGame();
 					}
 				}
 			}
@@ -167,7 +185,6 @@ public class NetworkManager : MonoBehaviour
 				}
 				if(GUI.Button(EV.relativeRect(5,10,15,3),"Refresh Hosts")) //On peut demander la liste des serveurs actuellement disponibles.
 				{
-					this.m_ConsoleMessage="Refreshing...";
 					this.RefreshHostList();
 				}
 				
@@ -187,7 +204,7 @@ public class NetworkManager : MonoBehaviour
 	/// <summary>
 	/// Refreshs the host list.
 	/// </summary>
-	void RefreshHostList()
+	public void RefreshHostList()
 	{
 		this.m_ConsoleMessage="Requesting Hosts List...";
 		MasterServer.RequestHostList(this.GAMENAME);
