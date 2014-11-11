@@ -7,6 +7,8 @@ public class NetworkManager : MonoBehaviour
 	const float CAM_DISTANCE = 8;
 	//Refs
 	public LobbyView m_LobbyView;
+	public string[] m_LevelNames;
+	public string m_SelectedLevel = "GrassLand";
 	public GameObject m_PlayerPrefab;//Player Default Prefab.
 	public GameObject m_GameManagerPrefab;//Default GameManager Prefab.
 	public GameObject[] m_TestSpawn; //Objets to spawn at map's center for testing purposes
@@ -97,12 +99,16 @@ public class NetworkManager : MonoBehaviour
 
 	public void startGame()
 	{
-		EV.gameManager.InitializeNetworkLevelLoad("GrassLand");
+		EV.gameManager.InitializeNetworkLevelLoad(this.m_SelectedLevel);
 	}
 
 	public void kickPlayer(NetworkPlayer p_Player)
 	{
 		Network.CloseConnection(p_Player,true);
+	}
+	public void connect(HostData p_Host)
+	{
+		Network.Connect(p_Host);
 	}
 
 	void OnGUI () 
@@ -193,7 +199,7 @@ public class NetworkManager : MonoBehaviour
 				{
 					if(GUI.Button(EV.relativeRect(25,15+(5*serverNumber),25,3),host.gameName+"("+host.connectedPlayers+"/"+host.playerLimit+")"))//Si l'on clique sur un, on s'y connecte.
 					{
-						Network.Connect(host);
+						this.connect(host);
 					}
 					serverNumber++;
 				}
