@@ -94,11 +94,12 @@
      <Compile Include="Assets\UIPrefabs\Scripts\ColorSelector.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\HostLabel.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\MapLabel.cs" />
+     <Compile Include="Assets\UIPrefabs\Scripts\PlayerLabel.cs" />
      <None Include="Assets\Standard Assets\Projectors\Guidelines.txt" />
      <None Include="Assets\Standard Assets\Skyboxes\_skybox info.txt" />
      <None Include="Assets\Standard Assets\Projectors\Sources\Shaders\Projector Multiply.shader" />
  <Reference Include="Assembly-UnityScript-firstpass">
- <HintPath>F:/GitHub/want-to-survive/Bonpaquet 4.5_FPS/Library/ScriptAssemblies/Assembly-UnityScript-firstpass.dll</HintPath>
+ <HintPath>E:/Git/want-to-survive/Bonpaquet 4.5_FPS/Library/ScriptAssemblies/Assembly-UnityScript-firstpass.dll</HintPath>
  </Reference>
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/4.6.0/UnityEngine.UI.dll</HintPath>

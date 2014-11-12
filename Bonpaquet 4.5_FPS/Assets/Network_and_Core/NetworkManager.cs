@@ -104,15 +104,23 @@ public class NetworkManager : MonoBehaviour
 
 	public void kickPlayer(NetworkPlayer p_Player)
 	{
-		Network.CloseConnection(p_Player,true);
+		if(p_Player.Equals(Network.player))
+		{
+			this.disconnect();
+		}
+		else
+		{
+			Network.CloseConnection(p_Player,true);
+		}
 	}
 	public void connect(HostData p_Host)
 	{
 		Network.Connect(p_Host);
 	}
-
+	/*
 	void OnGUI () 
 	{
+
 		if (m_IsInGame) //Lorsque en jeu, l'apport visuel du NetworkManager se limite au MainMenu.
 		{
 			if(this.m_ShowMenu)
@@ -177,6 +185,7 @@ public class NetworkManager : MonoBehaviour
 					if(GUI.Button(EV.relativeRect(10,30,10,3),"Start"))
 					{
 						this.startGame();
+
 					}
 				}
 			}
@@ -187,7 +196,7 @@ public class NetworkManager : MonoBehaviour
 				if(GUI.Button(EV.relativeRect(5,5,15,3),"Start Server")) //On peut démarrer un serveur.
 				{
 					this.m_ConsoleMessage="Starting Server...";
-					this.StartServer(m_ServerName);
+					this.StartServer();
 				}
 				if(GUI.Button(EV.relativeRect(5,10,15,3),"Refresh Hosts")) //On peut demander la liste des serveurs actuellement disponibles.
 				{
@@ -207,6 +216,7 @@ public class NetworkManager : MonoBehaviour
 		}
 
 	}
+	*/
 	/// <summary>
 	/// Refreshs the host list.
 	/// </summary>
@@ -295,10 +305,10 @@ public class NetworkManager : MonoBehaviour
 		this.EndGame();
 	}
 	
-	void StartServer (string serverName)
+	public void StartServer ()
 	{
 		Network.InitializeServer(3,25001,!Network.HavePublicAddress());
-		MasterServer.RegisterHost(this.GAMENAME,serverName,"Private");
+		MasterServer.RegisterHost(this.GAMENAME,this.m_ServerName,"Private");
 	}
 	
 	[RPC]
@@ -325,6 +335,10 @@ public class NetworkManager : MonoBehaviour
 		foreach(Renderer r in PlayerObject.GetComponentsInChildren(typeof(Renderer)))
 		{
 			r.material.SetColor("_Color",new Color(p_MainColor.x,p_MainColor.y,p_MainColor.z,1));
+		}
+		if(this.m_LobbyView!=null)
+		{
+			this.m_LobbyView.updatePlayerLabels();
 		}
 	}
 	
@@ -366,6 +380,10 @@ public class NetworkManager : MonoBehaviour
 		{
 			Debug.LogWarning("The player does not exist");
 		}
+		if(this.m_LobbyView!=null)
+		{
+			this.m_LobbyView.updatePlayerLabels();
+		}
 	}
 	
 	
@@ -380,6 +398,10 @@ public class NetworkManager : MonoBehaviour
 		{
 			this.m_PlayerInfos[p_NetworkPlayer].m_Name=this.m_MyName;
 		}
+		if(this.m_LobbyView!=null)
+		{
+			this.m_LobbyView.updatePlayerLabels();
+		}
 	}
 	
 	[RPC]
@@ -391,12 +413,20 @@ public class NetworkManager : MonoBehaviour
 			this.RPC_NewPlayerHasConnected(p_NetworkPlayer);
 		}
 		this.m_PlayerInfos[p_NetworkPlayer].m_Name=p_Name;
+		if(this.m_LobbyView!=null)
+		{
+			this.m_LobbyView.updatePlayerLabels();
+		}
 	}
 	
 	[RPC]
 	public void RPC_NewPlayerHasDisconnected (NetworkPlayer p_NetworkPlayer)
 	{
 		this.m_PlayerInfos.Remove(p_NetworkPlayer);
+		if(this.m_LobbyView!=null)
+		{
+			this.m_LobbyView.updatePlayerLabels();
+		}
 	}
 
 

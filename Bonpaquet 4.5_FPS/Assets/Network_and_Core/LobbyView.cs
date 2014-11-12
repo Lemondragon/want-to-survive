@@ -12,6 +12,8 @@ public class LobbyView : MonoBehaviour
 	public GameObject m_HostPanel;
 	public Button m_MapPrefab;
 	public GameObject m_MapPanel;
+	public PlayerLabel[] m_PlayerLabels;
+	public Text m_ServerNameLabel;
 	private int m_ActiveView = 0;
 
 	public void Start()
@@ -24,9 +26,15 @@ public class LobbyView : MonoBehaviour
 		this.m_Canevas[this.m_ActiveView].gameObject.SetActive(false);
 		this.m_ActiveView=p_View;
 		this.m_Canevas[p_View].gameObject.SetActive(true);
-		if (this.m_ActiveView == 3) 
+		switch(this.m_ActiveView)
 		{
+		case 3:
 			this.showLevelList();
+			break;
+		case 4:
+			this.updatePlayerLabels();
+			this.m_ServerNameLabel.text=EV.networkManager.m_ServerName;
+			break;
 		}
 	}
 
@@ -85,5 +93,14 @@ public class LobbyView : MonoBehaviour
 			MapLabel mapLabel = map.GetComponent<MapLabel>();
 			mapLabel.setMap(EV.networkManager.m_LevelNames[i]);
 		}
+	}
+
+	public void updatePlayerLabels()
+	{
+		foreach(PlayerLabel pl in this.m_PlayerLabels)
+		{
+			pl.updateView();
+		}
+
 	}
 }
