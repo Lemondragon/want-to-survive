@@ -21,6 +21,7 @@ public class HostLabel : MonoBehaviour {
 	public void connect()
 	{
 		EV.networkManager.connect (this.m_Host);
+		EV.networkManager.m_LobbyView.changeView(4);
 	}
 
 

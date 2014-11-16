@@ -41,8 +41,6 @@ public class SkillTree : MonoBehaviour
 		this.m_nextExpGain=Time.time+this.m_ExpGainInterval;
 		this.m_FocusExp = new float[7];
 		
-		this.m_FocusExp[(int)Focus.Zombie]=5;
-		
 		this.m_Skills=new Skill[15];
 		for(int i = 0;i<this.m_Skills.Length;i++)
 		{

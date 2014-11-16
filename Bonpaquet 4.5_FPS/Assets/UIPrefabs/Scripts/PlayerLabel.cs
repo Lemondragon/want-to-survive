@@ -15,7 +15,7 @@ public class PlayerLabel : MonoBehaviour
 			return this.m_IsReadyToggle.isOn;
 		return false;
 	}
-	
+
 	public void updateView()
 	{
 		if(this.m_Index<EV.networkManager.m_PlayerInfos.Count)
@@ -35,7 +35,7 @@ public class PlayerLabel : MonoBehaviour
 		}
 	}
 
-	private NetworkManager.PlayerInfos getMyInfos()
+	public NetworkManager.PlayerInfos getMyInfos()
 	{
 		int index = 0;
 		NetworkManager.PlayerInfos infos = null;

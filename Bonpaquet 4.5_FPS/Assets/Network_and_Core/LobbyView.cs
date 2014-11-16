@@ -14,6 +14,8 @@ public class LobbyView : MonoBehaviour
 	public GameObject m_MapPanel;
 	public PlayerLabel[] m_PlayerLabels;
 	public Text m_ServerNameLabel;
+	public Toggle[] m_StartingFocusToogle;
+	public Toggle m_UseExtendedSkillTreeToogle;
 	private int m_ActiveView = 0;
 
 	public void Start()
@@ -101,6 +103,38 @@ public class LobbyView : MonoBehaviour
 		{
 			pl.updateView();
 		}
+	}
 
+	public void setReadyState(bool p_State)
+	{
+		this.networkView.RPC("RPC_setReadyState",RPCMode.AllBuffered,Network.player,p_State);
+	}
+
+	[RPC]
+	public void RPC_setReadyState(NetworkPlayer p_Player,bool p_State)
+	{
+		bool ready = true;
+		foreach(PlayerLabel pl in this.m_PlayerLabels)
+		{
+			NetworkManager.PlayerInfos pi = pl.getMyInfos();
+			if(pi!=null)
+			{
+				if(pi.m_AssociatedPlayer.Equals(p_Player))
+				{
+					pl.m_IsReadyToggle.isOn=p_State;
+				}
+				ready&=pl.m_IsReadyToggle.isOn;
+			}
+		}
+		if(ready)
+		{
+			EV.networkManager.m_StartFocusBonus = new bool[this.m_StartingFocusToogle.Length];
+			for (int i = 0;i<this.m_StartingFocusToogle.Length;i++)
+			{
+				EV.networkManager.m_StartFocusBonus[i]=this.m_StartingFocusToogle[i].isOn;
+			}
+			EV.networkManager.m_UseExtendedSkillTree=this.m_UseExtendedSkillTreeToogle.isOn;
+			EV.networkManager.startGame();
+		}
 	}
 }

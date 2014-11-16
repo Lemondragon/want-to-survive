@@ -26,7 +26,8 @@ public class NetworkManager : MonoBehaviour
 	[HideInInspector]public Vector3 m_MyColor = new Vector3(0.5f,0.5f,0.5f);//Selected Color by local player.
 	private string m_ConsoleMessage; //Single Message Shown while not in Game. Used for Network state messages.
 	public string m_MyName = "Player";//Selected name of the local player.
-	
+	public bool[] m_StartFocusBonus;
+	public bool m_UseExtendedSkillTree=false;
 	//Server Info
 	public string m_ServerName = "Server";//Connected's Server Name.
 	
@@ -262,6 +263,17 @@ public class NetworkManager : MonoBehaviour
 			}
 			//On assigne les références possibles grâce à la création de ce nouveau joueur.
 			this.m_MyPlayer=playerObject;
+			PlayerMotor pm = this.m_MyPlayer.GetComponent<PlayerMotor>();
+			pm.Init();
+			//On lui donne son focus de base.
+			for(int i = 0;i<this.m_StartFocusBonus.Length;i++)
+			{
+				if(this.m_StartFocusBonus[i])
+				{
+					pm.gainFocusExp((Focus)i,100);
+				}
+			}
+			pm.m_SkillTree.m_UseExtendedSkills=this.m_UseExtendedSkillTree;
 			//Signifie l'apparition de ce nouveau joueur.
 			EV.gameManager.networkView.RPC("RPC_NewPlayer",RPCMode.All,playerObject.networkView.viewID,p_Player);
 			//Synchonise les attributs visuels sur chaque machine.
@@ -357,7 +369,6 @@ public class NetworkManager : MonoBehaviour
 		this.m_BusyTimer = 0f;
 		this.m_IsInGame = false;
 		this.m_ShowMenu = false;
-		this.m_MyColor = new Vector3(0.5f,0.5f,0.5f);
 		this.m_HostData = new HostData[0];
 		Application.LoadLevel("Lobby");
 	}

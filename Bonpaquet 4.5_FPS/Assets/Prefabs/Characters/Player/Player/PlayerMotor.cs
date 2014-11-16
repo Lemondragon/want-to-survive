@@ -71,7 +71,7 @@ public class PlayerMotor : Life
 	
 	public QuickSlot[] m_QuickSlots = new QuickSlot[4]; //Actions rapides.
 	public SkillTree m_SkillTreePrefab;
-	private SkillTree m_SkillTree;
+	[HideInInspector]public SkillTree m_SkillTree;
 	
 	private Vector2 m_LastMousePos; 
 
@@ -204,9 +204,7 @@ public class PlayerMotor : Life
 		}
 	}
 		
-	
-	// Use this for initialization
-	void Start () 
+	public void Init()
 	{
 		if(this.networkView.isMine)
 		{
@@ -229,7 +227,6 @@ public class PlayerMotor : Life
 			Screen.showCursor=false;
 		}
 	}
-	
 	// Update is called once per frame
 	public override void OnLive ()
 	{
