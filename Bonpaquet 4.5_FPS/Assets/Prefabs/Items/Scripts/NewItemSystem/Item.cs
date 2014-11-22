@@ -63,31 +63,7 @@ public class Item : MonoBehaviour
 	/// </summary>
 	public void RemoveFromInventory()
 	{
-		if(this.m_PlaceInMasterInventory>=0)
-		{
-			this.m_Master.m_Inventory[this.m_PlaceInMasterInventory]=null;
-			this.m_PlaceInMasterInventory=-1;
-			if(m_Master.m_SelectedItem==this.gameObject)
-			{
-				this.m_Master.m_SelectedItem=null;
-				this.m_Master.m_ContextualMenuPos.x=-1;
-			}
-			for(int i = 0;i<4;i++)
-			{
-				PlayerMotor.QuickSlot qs = this.m_Master.m_QuickSlots[i];
-				if(qs!=null)
-				{
-					if(qs.m_Item.Equals(this))
-					{
-						this.m_Master.m_QuickSlots[i]=null;
-					}
-				}
-			}
-		}
-		else
-		{
-			Debug.LogWarning("Vous avez tenté de retirer de l'inventaire un objet ayant un nombre négatif de position dans l'inventaire, il n'est probablement pas dans un inventaire.");
-		}
+		this.m_Master.m_Inventory.removeItem(this);
 	}
 	/// <summary>
 	/// Laisse tomber cet objet par terre. Activable par le menu.

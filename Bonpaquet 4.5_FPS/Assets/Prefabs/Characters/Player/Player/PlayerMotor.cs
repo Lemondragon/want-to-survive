@@ -21,7 +21,9 @@ public class PlayerMotor : Life
 	public GameObject m_Body; //Objet visuel contenant les animations.
 	public Transform m_Cursor;//Objet qui détermine ou le crusor est.
 	public float[] m_Test; //Liste temporaire afin d'ajuster des paramètres en temps réel ###TEMPORAIRE###
-	public Item[] m_Inventory;//Inventaire du joueur.
+	//public Item[] m_Inventory;//Inventaire du joueur.
+	public Inventory m_Inventory;
+	public GameObject m_PlayerMenuView;
 	public int[] m_InventoryGUI; //Mesures pour l'affichage de l'inventaire.
 	[HideInInspector]public bool m_ShowInventory = false;//Indicateur d'affichage de l'inventaire (Affiché/caché).
 	[HideInInspector]private bool m_ShowBulletSupplies = true;
@@ -208,10 +210,12 @@ public class PlayerMotor : Life
 	{
 		if(this.networkView.isMine)
 		{
+		
+			this.m_PlayerMenuView.SetActive(false);
+
 			this.m_SkillTree=Instantiate(this.m_SkillTreePrefab) as SkillTree;
 			this.m_SkillTree.Init(this);
 			this.m_Stamina=this.getMaxStamina();//Débute avec la stamina au maximum.
-			this.m_Inventory = new Item[9];
 			this.m_BulletSupplies=new Dictionary<EV.AmmoType, BulletSupplies>();
 			this.m_BulletSupplies.Add(EV.AmmoType.Pistol,new BulletSupplies());
 			this.m_BulletSupplies.Add(EV.AmmoType.Rifle,new BulletSupplies());
@@ -225,6 +229,10 @@ public class PlayerMotor : Life
 				this.TakeBullet(EV.AmmoType.Arrow,(byte)(UnityEngine.Random.value*100));
 			}
 			Screen.showCursor=false;
+		}
+		else
+		{
+			Destroy(this.m_PlayerMenuView);
 		}
 	}
 	// Update is called once per frame
@@ -356,7 +364,8 @@ public class PlayerMotor : Life
 			{
 				this.m_SelectedItem=null;
 				this.m_ContextualMenuPos.x=-1;
-				this.m_ShowInventory=!this.m_ShowInventory;
+				//this.m_ShowInventory=!this.m_ShowInventory;
+				this.m_PlayerMenuView.SetActive(true);
 				Screen.showCursor=this.m_ShowInventory;
 				this.GetComponent<MouseLook>().enabled=!this.m_ShowInventory;
 			}
@@ -381,52 +390,9 @@ public class PlayerMotor : Life
 		}
 		base.OnLive();
 	}
-
-	public bool TakeItem (Item p_Item)
+	public void TakeItem (Item p_Item)
 	{
-		bool got = false;
-		//Vérifie si il ne pourrais pas l'empiler
-		if(p_Item.m_IsStackable)
-		{
-			for (int i = 0;i<9;i++)
-			{
-				if(this.m_Inventory[i]!=null)
-				{
-					if(this.m_Inventory[i].m_IsStackable&&this.m_Inventory[i].m_StackableID==p_Item.m_StackableID)
-					{
-						
-						this.m_Inventory[i].networkView.RPC("ChangeQuantity",RPCMode.AllBuffered,p_Item.m_ItemQuantity);
-						p_Item.Pickup(this);
-						EV.gameManager.GUIMessage("You recieved more :"+m_Inventory[i].m_ItemName,EV.QualityColor(p_Item.m_ItemQuality));
-						got=true;
-						i=9;
-					}
-				}
-			}
-		}
-		if(!got)
-		{
-			bool full = true;
-			for (int i = 0;i<9;i++)
-			{
-				if(this.m_Inventory[i]==null)
-				{
-					got=true;
-					full=false;
-					this.m_Inventory[i]=p_Item;
-					p_Item.Pickup(this);
-					p_Item.m_PlaceInMasterInventory=i;
-					EV.gameManager.GUIMessage("You recieved :"+this.m_Inventory[i].m_ItemName,EV.QualityColor(p_Item.m_ItemQuality));
-					i=9;
-				}
-			}
-			if (full)
-			{
-				p_Item.Drop();
-				EV.gameManager.GUIMessage("Cannot take:"+p_Item.m_ItemName+" because invetory is full.",Color.red);
-			}
-		}
-		return got;
+		this.m_Inventory.addItem(p_Item);
 	}
 	
 	//Menu Called
@@ -559,7 +525,7 @@ public class PlayerMotor : Life
 		EV.gameManager.networkView.RPC("MessageBroadcast",RPCMode.All,"A Survivor has died.");
 		EV.gameManager.networkView.RPC("PlayerOut",RPCMode.All,Network.player);
 	}
-	
+	/*
 	void OnGUI()
 	{
 		if(this.networkView.isMine)
@@ -571,8 +537,10 @@ public class PlayerMotor : Life
 			//OverLay
 			GUI.DrawTexture(EV.relativeRect(0,0,160,90),this.m_Vignette);
 			//Inventaire
+
 			if(m_ShowInventory)
 			{
+
 				GUI.Box(EV.relativeRect(1,44,40,45),"Inventory");
 				for(int i=0; i<this.m_Inventory.Length ;i++)
 				{
@@ -601,14 +569,14 @@ public class PlayerMotor : Life
 							{
 								this.m_SelectedItem=this.m_Inventory[i];
 								// Si il clique dessus.
-								/*if (Input.GetMouseButtonDown(1))
+								if (Input.GetMouseButtonDown(1))
 								{
 									this.m_ContextualMenuPos=Event.current.mousePosition;
 								}
 								else if (Input.GetMouseButtonDown(0))
 								{
 									this.m_SelectedItem.UseAction(0);
-								}*/
+								}
 							}
 							else if (this.m_SelectedItem==this.m_Inventory[i])
 							{
@@ -620,7 +588,9 @@ public class PlayerMotor : Life
 					{
 						GUI.Box(itemRect, "");
 					}
+
 				}
+
 				//BulletSupplies
 				if(this.m_ShowBulletSupplies)
 				{
@@ -763,9 +733,10 @@ public class PlayerMotor : Life
 					GUI.DrawTexture(theRect,qs.m_Item.m_ItemImage,ScaleMode.StretchToFill);
 				}
 			}
-		}
+
 		this.m_LastMousePos=Event.current.mousePosition;
 	}
+	*/
 	/// <summary>
 	/// Generates threat at set intervalls (MOVE_THREAT_TICK_TIME).
 	/// </summary>
