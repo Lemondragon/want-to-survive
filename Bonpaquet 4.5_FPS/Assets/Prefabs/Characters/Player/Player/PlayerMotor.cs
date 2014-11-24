@@ -24,6 +24,7 @@ public class PlayerMotor : Life
 	//public Item[] m_Inventory;//Inventaire du joueur.
 	public Inventory m_Inventory;
 	public GameObject m_PlayerMenuView;
+	public InventoryView m_InventoryView;
 	public int[] m_InventoryGUI; //Mesures pour l'affichage de l'inventaire.
 	[HideInInspector]public bool m_ShowInventory = false;//Indicateur d'affichage de l'inventaire (Affiché/caché).
 	[HideInInspector]private bool m_ShowBulletSupplies = true;
@@ -212,7 +213,8 @@ public class PlayerMotor : Life
 		{
 		
 			this.m_PlayerMenuView.SetActive(false);
-
+			this.m_Inventory = new Inventory(this);
+			this.m_InventoryView.m_DisplayedInventory=this.m_Inventory;
 			this.m_SkillTree=Instantiate(this.m_SkillTreePrefab) as SkillTree;
 			this.m_SkillTree.Init(this);
 			this.m_Stamina=this.getMaxStamina();//Débute avec la stamina au maximum.
@@ -364,8 +366,8 @@ public class PlayerMotor : Life
 			{
 				this.m_SelectedItem=null;
 				this.m_ContextualMenuPos.x=-1;
-				//this.m_ShowInventory=!this.m_ShowInventory;
-				this.m_PlayerMenuView.SetActive(true);
+				this.m_ShowInventory=!this.m_ShowInventory;
+				this.m_PlayerMenuView.SetActive(this.m_ShowInventory);
 				Screen.showCursor=this.m_ShowInventory;
 				this.GetComponent<MouseLook>().enabled=!this.m_ShowInventory;
 			}
@@ -393,6 +395,7 @@ public class PlayerMotor : Life
 	public void TakeItem (Item p_Item)
 	{
 		this.m_Inventory.addItem(p_Item);
+		this.m_InventoryView.updateAll();
 	}
 	
 	//Menu Called

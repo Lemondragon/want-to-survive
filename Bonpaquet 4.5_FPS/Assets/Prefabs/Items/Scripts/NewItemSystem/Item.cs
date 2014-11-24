@@ -7,7 +7,7 @@ public class Item : MonoBehaviour
 	public string m_ItemName = ""; //Nom d'affichage de l'objet.
 	[HideInInspector]public string m_BaseName = "";// Nom de base de l'objet.
 	public EV.ItemQuality m_ItemQuality = EV.ItemQuality.Junk; //Qualité de l'objet.
-	public Texture m_ItemImage;//Image pour l'affichage de l'objet.
+	public Sprite m_ItemImage;//Image pour l'affichage de l'objet.
 	public bool m_IsStackable = false;//Si l'objet peut augmenter sa quantité.
 	public int m_StackableID = 0; //Identifiant d'empilable, deux objets ayant le même Stackable ID et étant isStackable seront empilés.
 	public int m_ItemQuantity = 1; //Nombre d'exemplaires.

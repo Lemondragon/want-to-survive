@@ -96,6 +96,7 @@
      <Compile Include="Assets\UIPrefabs\Scripts\ColorSelector.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\HostLabel.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\InventoryView.cs" />
+     <Compile Include="Assets\UIPrefabs\Scripts\ItemButton.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\MapLabel.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\PlayerLabel.cs" />
      <None Include="Assets\Standard Assets\Projectors\Guidelines.txt" />

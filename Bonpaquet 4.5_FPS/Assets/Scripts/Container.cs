@@ -40,8 +40,7 @@ public class Container {
 			if(this.addIntoBag(p_Item,bag))return;
 		}
 		this.addNewBag();
-		this.addIntoBag(p_Item,this.m_Contents[m_Contents.Count]);
-		p_Item.Pickup(this.m_Owner);
+		this.addIntoBag(p_Item,this.m_Contents[m_Contents.Count-1]);
 		this.OnNewPickup(p_Item);
 	}
 
@@ -103,6 +102,7 @@ public class Container {
 			if(p_Bag[i]==null)
 			{
 				p_Bag[i]=p_Item;
+				p_Item.Pickup(this.m_Owner);
 				return true;
 			}
 		}
