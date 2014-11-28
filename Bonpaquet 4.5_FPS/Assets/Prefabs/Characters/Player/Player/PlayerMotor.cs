@@ -20,6 +20,7 @@ public class PlayerMotor : Life
 	[HideInInspector]public Camera m_Cam; //Camera observant cet objet.
 	public GameObject m_Body; //Objet visuel contenant les animations.
 	public Transform m_Cursor;//Objet qui détermine ou le crusor est.
+	public SkillTree m_SkillTreePrefab;
 	public float[] m_Test; //Liste temporaire afin d'ajuster des paramètres en temps réel ###TEMPORAIRE###
 	//public Item[] m_Inventory;//Inventaire du joueur.
 	public Inventory m_Inventory;
@@ -72,8 +73,7 @@ public class PlayerMotor : Life
 	[HideInInspector]public string m_ActionName; //Nom de l'action.
 	[HideInInspector]public bool m_RepeatAction; //Indicateur si l'action se répète automatiquement lors de la complétion.
 	
-	public QuickSlot[] m_QuickSlots = new QuickSlot[4]; //Actions rapides.
-	public SkillTree m_SkillTreePrefab;
+	private QuickslotManager m_QuickSlotManager;
 	[HideInInspector]public SkillTree m_SkillTree;
 	
 	private Vector2 m_LastMousePos; 
@@ -91,28 +91,7 @@ public class PlayerMotor : Life
 	[HideInInspector]public bool m_MouseClick = false;
 	public float maxHeight = 1; //Hauteur maximale du pivot du joueur.
 	
-	/// <summary>
-	/// Classe représentant une action rapide.
-	/// </summary>
-	public class QuickSlot
-	{
-		public Item m_Item; //Objet ciblé par l'action.
-		public byte m_ActionNumber; //Numéro de l'action à effectuer sur l'objet.
-		/// <summary>
-		/// Initializes a new instance of the <see cref="PlayerMotor.QuickSlot"/> class.
-		/// </summary>
-		/// <param name='p_Item'>
-		/// Action's target.
-		/// </param>
-		/// <param name='p_ActionNumber'>
-		/// Target's action's number.
-		/// </param>
-		public QuickSlot (Item p_Item,byte p_ActionNumber)
-		{
-			this.m_ActionNumber=p_ActionNumber;
-			this.m_Item = p_Item;
-		}
-	}
+
 	
 	/// <summary>
 	/// Classe pour classer les différentes qualités de munitions pour le même ammoType.
@@ -211,10 +190,13 @@ public class PlayerMotor : Life
 	{
 		if(this.networkView.isMine)
 		{
-		
+			this.m_QuickSlotManager = this.gameObject.AddComponent<QuickslotManager>();
+			PlayerUI.m_QuickSlotManager= this.m_QuickSlotManager;
+			PlayerUI.m_PlayerMenuView= this.m_PlayerMenuView;
+			PlayerUI.m_InventoryView= this.m_InventoryView;
 			this.m_PlayerMenuView.SetActive(false);
 			this.m_Inventory = new Inventory(this);
-			this.m_InventoryView.m_DisplayedInventory=this.m_Inventory;
+			this.m_InventoryView.setDisplayedInventory(this.m_Inventory);
 			this.m_SkillTree=Instantiate(this.m_SkillTreePrefab) as SkillTree;
 			this.m_SkillTree.Init(this);
 			this.m_Stamina=this.getMaxStamina();//Débute avec la stamina au maximum.
@@ -262,7 +244,7 @@ public class PlayerMotor : Life
 				this.transform.position = new Vector3(this.transform.position.x,this.maxHeight-0.01f,this.transform.position.z);
 			}
 			//Activation des quickslots
-			if(!this.m_ShowInventory)
+			/*if(!this.m_ShowInventory)
 			{
 				for(int i = 0;i<4;i++)
 				{
@@ -277,7 +259,7 @@ public class PlayerMotor : Life
 						}
 					}
 				}
-			}
+			}*/
 			//Obtiens les commandes directionelles.
 			float  i_horizontal = Input.GetAxis("Horizontal");
 			float i_vertical = Input.GetAxis("Vertical");
@@ -395,7 +377,6 @@ public class PlayerMotor : Life
 	public void TakeItem (Item p_Item)
 	{
 		this.m_Inventory.addItem(p_Item);
-		this.m_InventoryView.updateAll();
 	}
 	
 	//Menu Called
@@ -816,6 +797,7 @@ public class PlayerMotor : Life
 			break;
 		}
 	}
+	
 	/// <summary>
 	/// Raccourci vers Skilltree.gainFocusExp().
 	/// </summary>

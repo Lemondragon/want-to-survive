@@ -8,7 +8,7 @@ public abstract class Health : MonoBehaviour
 {
 
 	public AudioClip m_HitSound;
-	
+	protected Observable m_Observable = new Observable();
 	private float m_Bleed = 0f; //Quantité de Bleed.
 	private float m_Commotion = 0f; //Quantité de Commotion.
 	public float m_CommotionThresold = 50f; //Commotion maximale avant la mort.

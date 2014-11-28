@@ -1,38 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Inventory : Container {
+public class Inventory : Container,IObserver {
 
-	public Inventory (PlayerMotor p_Owner):base(3,3,p_Owner)
+	public Inventory (PlayerMotor p_Owner):base(9,p_Owner)
 	{
 		if(p_Owner==null)throw new MissingReferenceException("An inventory's owner can't be null");
+		this.getObservable().subscribe(this);
 	}
 
-	protected override void OnNewPickup (Item p_Item)
+	public void update(ObserverMessages p_Message, object p_Argument)
 	{
-		EV.gameManager.GUIMessage("You recieved :"+p_Item.m_ItemName,EV.QualityColor(p_Item.m_ItemQuality));
-	}
-
-	protected override void OnStackPickup (Item p_Item)
-	{
-		EV.gameManager.GUIMessage("You recieved more :"+p_Item.m_ItemName,EV.QualityColor(p_Item.m_ItemQuality));
-	}
-
-	protected override void OnRemoveItem (Item p_Item)
-	{
-		for(int i = 0;i<this.m_Owner.m_QuickSlots.Length;i++)
+		Item item = p_Argument as Item;
+		switch(p_Message)
 		{
-			PlayerMotor.QuickSlot qs = this.m_Owner.m_QuickSlots[i];
-			if(qs!=null)
-			{
-				if(qs.m_Item.Equals(this))
-				{
-					this.m_Owner.m_QuickSlots[i]=null;
-				}
-			}
+			case ObserverMessages.ItemStacked:
+				EV.gameManager.GUIMessage("You recieved more :"+item.m_ItemName,EV.QualityColor(item.m_ItemQuality));
+			break;
+			case ObserverMessages.ItemGained:
+				EV.gameManager.GUIMessage("You recieved :"+item.m_ItemName,EV.QualityColor(item.m_ItemQuality));
+			break;
 		}
 	}
-
 
 
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class Item : MonoBehaviour 
 {
+	protected Observable m_Observable = new Observable();
 	public string m_ItemName = ""; //Nom d'affichage de l'objet.
 	[HideInInspector]public string m_BaseName = "";// Nom de base de l'objet.
 	public EV.ItemQuality m_ItemQuality = EV.ItemQuality.Junk; //Qualité de l'objet.

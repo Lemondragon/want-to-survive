@@ -5,21 +5,26 @@ using System.Collections.Generic;
 public class Container {
 
 	public List<Item[]> m_Contents = new List<Item[]>();
-	private int m_BagLength = 3;
-	private int m_BagHeight = 3;
+	private Observable m_Observable = new Observable();
+	private int m_Size;
 	protected PlayerMotor m_Owner;
 	
-	public Container(int p_Length,int p_Height, PlayerMotor p_Owner)
+	public Container(int p_Size, PlayerMotor p_Owner)
 	{
 		this.m_Owner=p_Owner;
-		this.m_BagLength=p_Length;
-		this.m_BagHeight=p_Height;
+		this.m_Size=p_Size;
 		this.addNewBag();
+	}
+
+	public Observable getObservable()
+	{
+		return this.m_Observable;
 	}
 
 	private void addNewBag()
 	{
-		this.m_Contents.Add(new Item[this.m_BagHeight*this.m_BagHeight]);
+		this.m_Observable.notify(ObserverMessages.BagQuantityChange);
+		this.m_Contents.Add(new Item[this.m_Size]);
 	}
 
 	public void addItem(Item p_Item)
@@ -31,7 +36,7 @@ public class Container {
 			{
 				stackable.networkView.RPC("ChangeQuantity",RPCMode.AllBuffered,p_Item.m_ItemQuantity);
 				Network.Destroy(p_Item.gameObject);
-				this.OnStackPickup(stackable);
+				this.m_Observable.notify(ObserverMessages.ItemStacked,stackable);
 				return;
 			}
 		}
@@ -41,7 +46,6 @@ public class Container {
 		}
 		this.addNewBag();
 		this.addIntoBag(p_Item,this.m_Contents[m_Contents.Count-1]);
-		this.OnNewPickup(p_Item);
 	}
 
 	public void removeItem(Item p_Item)
@@ -53,11 +57,11 @@ public class Container {
 				if(bag[i]==p_Item)
 				{
 					bag[i].m_Master=null;
-					this.OnRemoveItem(bag[i]);
+					this.m_Observable.notify(ObserverMessages.ItemLost,bag[i]);
 					bag[i]=null;
 					if(this.isBagEmpty(bag))
 					{
-						this.m_Contents.Remove(bag);
+						this.removeBag(bag);
 					}
 				}
 			}
@@ -78,11 +82,13 @@ public class Container {
 
 	private void removeEmptyBags()
 	{
+		bool remove = false;
 		foreach(Item[] bag in this.m_Contents)
 		{
 			if(this.isBagEmpty(bag))
 			{
-				this.m_Contents.Remove(bag);
+				remove = true;
+				this.removeBag(bag);
 			}
 		}
 	}
@@ -103,6 +109,7 @@ public class Container {
 			{
 				p_Bag[i]=p_Item;
 				p_Item.Pickup(this.m_Owner);
+				this.m_Observable.notify(ObserverMessages.ItemGained,p_Item);
 				return true;
 			}
 		}
@@ -121,10 +128,11 @@ public class Container {
 			}
 		}
 		return null;
-	}
-	protected virtual void OnStackPickup(Item p_Item){}
-	protected virtual void OnNewPickup(Item p_Item){}
-	protected virtual void OnRemoveItem(Item p_Item){}
+	}	
 
-		                         
+	private void removeBag(Item[] p_Bag)
+	{
+		this.m_Contents.Remove(p_Bag);
+		this.m_Observable.notify(ObserverMessages.BagQuantityChange);
+	}
 }
