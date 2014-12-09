@@ -196,6 +196,7 @@ public class PlayerMotor : Life
 			PlayerUI.m_InventoryView= this.m_InventoryView;
 			this.m_PlayerMenuView.SetActive(false);
 			this.m_Inventory = new Inventory(this);
+			this.m_Inventory.getObservable().subscribe(this.m_QuickSlotManager);
 			this.m_InventoryView.setDisplayedInventory(this.m_Inventory);
 			this.m_SkillTree=Instantiate(this.m_SkillTreePrefab) as SkillTree;
 			this.m_SkillTree.Init(this);

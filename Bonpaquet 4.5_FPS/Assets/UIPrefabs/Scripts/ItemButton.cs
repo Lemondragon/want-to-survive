@@ -32,8 +32,15 @@ public class ItemButton : MonoBehaviour {
 		}
 	}
 
-	public void useItemAction(int p_Action)
+	public void click()
 	{
-		this.m_Item.UseAction((byte)p_Action);
+		if(PlayerUI.m_InventoryView.getSelected()==this.m_Item)
+		{
+			this.m_Item.UseAction(0);
+		}
+		else
+		{
+			PlayerUI.m_InventoryView.selectItem(this.m_Item);
+		}
 	}
 }

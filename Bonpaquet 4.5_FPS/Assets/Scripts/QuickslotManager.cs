@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class QuickslotManager : MonoBehaviour{
+public class QuickslotManager : MonoBehaviour,IObserver{
 
 	private QuickSlot[] m_QuickSlots = new QuickSlot[8]; //Actions rapides.
 	/// <summary>
@@ -59,6 +59,16 @@ public class QuickslotManager : MonoBehaviour{
 					this.m_QuickSlots[j].Execute();
 				}
 			}
+		}
+	}
+
+	public void update(ObserverMessages p_Message,object p_Argument)
+	{
+		switch(p_Message)
+		{
+		case ObserverMessages.ItemLost:
+			this.dismissQuickSlotsOf(p_Argument as Item);
+			break;
 		}
 	}
 }
