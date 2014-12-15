@@ -29,12 +29,12 @@ public class Container {
 
 	public void addItem(Item p_Item)
 	{
-		if(p_Item.m_IsStackable)
+		if(p_Item.IsStackable)
 		{
-			Item stackable = this.findStackable(p_Item.m_StackableID);
+			Item stackable = this.findStackable(p_Item.StackableID);
 			if(stackable!=null)
 			{
-				stackable.networkView.RPC("ChangeQuantity",RPCMode.AllBuffered,p_Item.m_ItemQuantity);
+				stackable.networkView.RPC("ChangeQuantity",RPCMode.AllBuffered,p_Item.Quantity);
 				Network.Destroy(p_Item.gameObject);
 				this.m_Observable.notify(ObserverMessages.ItemStacked,stackable);
 				return;
@@ -56,17 +56,39 @@ public class Container {
 			{
 				if(bag[i]==p_Item)
 				{
-					bag[i].m_Master=null;
-					this.m_Observable.notify(ObserverMessages.ItemLost,bag[i]);
+					bag[i].Master=null;
 					bag[i]=null;
-					if(this.isBagEmpty(bag))
+					if(this.m_Contents.Count>1&&this.isBagEmpty(bag))
 					{
 						this.removeBag(bag);
 					}
+					this.m_Observable.notify(ObserverMessages.ItemLost,p_Item);
 				}
 			}
 		}
 	}
+
+	public void Swap (int p_From,int p_To,int p_Bag)
+	{
+		Item temp = this.m_Contents[p_Bag][p_From];
+		this.m_Contents[p_Bag][p_From]=this.m_Contents[p_Bag][p_To];
+		this.m_Contents[p_Bag][p_To]=temp;
+		this.m_Observable.notify(ObserverMessages.BagDispositionChanged,p_Bag);
+	}
+
+	public int getIndexOf(Item p_Item,int p_Bag)
+	{
+		for(int i = 0;i<this.m_Contents[p_Bag].Length;i++)
+		{
+			Item itm = this.m_Contents[p_Bag][i];
+			if(itm!=null&&itm.Equals(p_Item))
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	public int getWeight()
 	{
 		int weight = 0;
@@ -74,7 +96,7 @@ public class Container {
 		{
 			foreach(Item i in bag)
 			{
-				weight+=i.m_ItemWeight;
+				weight+=i.Weight;
 			}
 		}
 		return weight;
@@ -82,12 +104,10 @@ public class Container {
 
 	private void removeEmptyBags()
 	{
-		bool remove = false;
 		foreach(Item[] bag in this.m_Contents)
 		{
 			if(this.isBagEmpty(bag))
 			{
-				remove = true;
 				this.removeBag(bag);
 			}
 		}
@@ -121,7 +141,7 @@ public class Container {
 		{
 			for(int i = 0;i<bag.Length;i++)
 			{
-				if(bag[i]!=null && bag[i].m_StackableID==p_StackableID)
+				if(bag[i]!=null && bag[i].StackableID==p_StackableID)
 				{
 					return bag[i];
 				}

@@ -98,18 +98,23 @@
      <Compile Include="Assets\Scripts\QuickslotManager.cs" />
      <Compile Include="Assets\Tools\BuildHouses\TextureScaler.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\ActionButton.cs" />
+     <Compile Include="Assets\UIPrefabs\Scripts\ActionsView.cs" />
+     <Compile Include="Assets\UIPrefabs\Scripts\CanevaSpaceShrinker.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\ColorSelector.cs" />
+     <Compile Include="Assets\UIPrefabs\Scripts\HealthMonitorView.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\HostLabel.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\InventoryView.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\ItemButton.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\MapLabel.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\PlayerLabel.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\PlayerUI.cs" />
+     <Compile Include="Assets\UIPrefabs\Scripts\QuickSlotButton.cs" />
      <None Include="Assets\Standard Assets\Projectors\Guidelines.txt" />
      <None Include="Assets\Standard Assets\Skyboxes\_skybox info.txt" />
      <None Include="Assets\Standard Assets\Projectors\Sources\Shaders\Projector Multiply.shader" />
+     <None Include="Assets\Textures\Materials\SpriteCutout.shader" />
  <Reference Include="Assembly-UnityScript-firstpass">
- <HintPath>E:/Git/want-to-survive/Bonpaquet 4.5_FPS/Library/ScriptAssemblies/Assembly-UnityScript-firstpass.dll</HintPath>
+ <HintPath>G:/GitHub/want-to-survive/Bonpaquet 4.5_FPS/Library/ScriptAssemblies/Assembly-UnityScript-firstpass.dll</HintPath>
  </Reference>
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/4.6.0/UnityEngine.UI.dll</HintPath>

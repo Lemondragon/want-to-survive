@@ -5,7 +5,7 @@ public class Ceilling : MonoBehaviour
 {
 	public Renderer[] m_ChildRenderers;
 
-
+	/*
 	void OnTriggerEnter(Collider colliderInfo)
 	{
 		this.TriggerRenderer(false,colliderInfo);
@@ -15,7 +15,7 @@ public class Ceilling : MonoBehaviour
 	{
 		this.TriggerRenderer(true,colliderInfo);
 	}
-	
+    */
 	void TriggerRenderer(bool p_State,Collider p_Collider)
 	{
 		if(p_Collider.networkView!=null)

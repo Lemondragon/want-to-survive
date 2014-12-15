@@ -4,38 +4,98 @@ using System.Collections.Generic;
 
 public class Item : MonoBehaviour 
 {
-	protected Observable m_Observable = new Observable();
-	public string m_ItemName = ""; //Nom d'affichage de l'objet.
-	[HideInInspector]public string m_BaseName = "";// Nom de base de l'objet.
-	public EV.ItemQuality m_ItemQuality = EV.ItemQuality.Junk; //Qualité de l'objet.
-	public Sprite m_ItemImage;//Image pour l'affichage de l'objet.
-	public bool m_IsStackable = false;//Si l'objet peut augmenter sa quantité.
-	public int m_StackableID = 0; //Identifiant d'empilable, deux objets ayant le même Stackable ID et étant isStackable seront empilés.
-	public int m_ItemQuantity = 1; //Nombre d'exemplaires.
-	[HideInInspector]public List<string> m_PossibleActionNames; //Liste des noms des actions possibles sur cet objet.
-	[HideInInspector]public List<Action> m_PossibleActions = new List<Action>(); //Délégués des actions possibles sur cet objet.
-	public int m_ItemWeight = 0; //Poids de l'objet.
-	[HideInInspector]public PlayerMotor m_Master; //Propriétaire de l'objet.
-	[HideInInspector]public int m_PlaceInMasterInventory=-1; //Index de la position dans l'inventaire du propriétaire.-1 signifie qu'il n'a pas de propriétaire.
-	public AudioClip[] m_Sounds; //Sons disponibles pour l'objet.
+	private Observable m_Observable = new Observable();
+	[SerializeField]
+	private string m_ItemName = ""; //Nom d'affichage de l'objet.
+	private string m_BaseName = "";// Nom de base de l'objet.
+	[SerializeField]
+	private EV.ItemQuality m_ItemQuality = EV.ItemQuality.Junk; //Qualité de l'objet.
+	[SerializeField]
+	private Sprite m_ItemImage;//Image pour l'affichage de l'objet.
+	[SerializeField]
+	private bool m_IsStackable = false;//Si l'objet peut augmenter sa quantité.
+	[SerializeField]
+	private int m_StackableID = 0; //Identifiant d'empilable, deux objets ayant le même Stackable ID et étant isStackable seront empilés.
+	[SerializeField]
+	private int m_ItemQuantity = 1; //Nombre d'exemplaires.
+	protected List<string> m_PossibleActionNames = new List<string>(); //Liste des noms des actions possibles sur cet objet.
+	protected List<Action> m_PossibleActions = new List<Action>(); //Délégués des actions possibles sur cet objet.
+	[SerializeField]
+	private int m_ItemWeight = 0; //Poids de l'objet.
+	protected PlayerMotor m_Master; //Propriétaire de l'objet.
+	[SerializeField]
+	protected AudioClip[] m_Sounds; //Sons disponibles pour l'objet.
 	
 	virtual public void Start()
 	{
-		this.m_BaseName=this.m_ItemName;
+		this.m_BaseName=this.FullName;
 		this.m_PossibleActionNames.Add("Drop");
 		this.m_PossibleActions.Add(()=> this.Drop());
-		/*if(this.GetComponent("Heldable")!=null)
-		{
-			this.possibleActionsNames.Add("Equip");
-			this.possibleActions.Add(()=> this.Equip());
-			this.myHeldable=(Heldable)this.GetComponent("Heldable");
-			if(this.myHeldable.h_type==Heldable.HeldableType.FireArm)
-			{
-				this.possibleActionsNames.Add("Remove Clip");
-				this.possibleActions.Add(()=> myHeldable.RemoveClip());
-			}
-		}*/
 		this.Rename();
+	}
+
+	public int Quantity
+	{
+		get{return this.m_ItemQuantity;}
+		set
+		{
+			this.m_ItemQuantity=value;
+			this.m_Observable.notify(ObserverMessages.ItemUpdated,this);
+		}
+	}
+	public EV.ItemQuality Quality
+	{
+		get{return this.m_ItemQuality;}
+		set
+		{
+			this.m_ItemQuality=value;
+			this.m_Observable.notify(ObserverMessages.ItemUpdated,this);
+		}
+	}
+	public string FullName
+	{
+		get{return this.m_ItemName;}
+		protected set
+		{
+			this.m_ItemName=value;
+			this.m_Observable.notify(ObserverMessages.ItemUpdated,this);
+		}
+	}
+
+	public string BaseName
+	{
+		get{return this.m_BaseName;}
+	}
+	public bool IsStackable
+	{
+		get{return this.m_IsStackable;}
+	}
+	public int StackableID
+	{
+		get{return this.m_StackableID;}
+	}
+
+	public List<string> ActionNames
+	{
+		get{return this.m_PossibleActionNames;}
+	}
+	public PlayerMotor Master
+	{
+		get{return this.m_Master;}
+		set{this.m_Master=value;}
+	}
+	public int Weight
+	{
+		get{return this.m_ItemWeight;}
+	}
+	public Sprite Image
+	{
+		get{return this.m_ItemImage;}
+	}
+
+	public Observable getObservable()
+	{
+		return this.m_Observable;
 	}
 
 	/// <summary>
@@ -71,22 +131,13 @@ public class Item : MonoBehaviour
 	/// </summary>
 	public virtual void Drop ()
 	{
-		/*if(this.myHeldable!=null)
-		{
-			if(this.myHeldable.heldByHand!=-1)
-			{
-				this.master.Unequip(null);
-				this.myHeldable.heldByHand=-1;
-			}
-		}*/
 		Equippable equippable = this as Equippable;
 		if(equippable !=null)
 		{
 			this.m_Master.Unequip(equippable);
 		}
-		this.RemoveFromInventory();
 		networkView.RPC("ChangeActive",RPCMode.AllBuffered,true,m_Master.transform.position+new Vector3(0,1,0),m_Master.transform.rotation);
-		this.m_Master=null;
+		this.RemoveFromInventory();
 	}
 	/// <summary>
 	/// Renomme proprement le nom d'affichage de cet objet.
@@ -95,7 +146,7 @@ public class Item : MonoBehaviour
 	{
 		if(this.m_IsStackable)
 		{
-			this.m_ItemName=this.m_BaseName+"("+this.m_ItemQuantity+")";
+			this.FullName=this.m_BaseName+"("+this.m_ItemQuantity+")";
 		}
 	}
 	/// <summary>

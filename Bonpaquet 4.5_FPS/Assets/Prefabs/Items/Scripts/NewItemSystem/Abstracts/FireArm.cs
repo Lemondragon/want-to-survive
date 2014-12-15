@@ -40,6 +40,7 @@ public abstract class FireArm : Weapon
 					float commoDamage = (1-this.m_BleedRatio)*this.m_Power*p_Bullet/75*multiplier;
 					colHealth.networkView.RPC("AddBleed",RPCMode.AllBuffered,bleedDamage,this.networkView.viewID);
 					colHealth.networkView.RPC("AddCommotion",RPCMode.AllBuffered,commoDamage,this.networkView.viewID);
+					this.CreateImpact(colHealth,hitInfo.point);
 					this.onHit(colHealth.gameObject,bleedDamage+commoDamage);
 				}
 			}

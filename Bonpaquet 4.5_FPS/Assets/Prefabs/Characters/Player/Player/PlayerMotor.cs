@@ -12,39 +12,34 @@ public class PlayerMotor : Life
 	const float WALK_THREAT_GAIN = 5;//Per second
 	const float COWARD_THREAT_THRESOLD = 50; //Maximum threat to gain Coward Exp;
 	const float COWARD_FOCUS_GAIN = 2; //Coward focus gain at 0 Threat per second.
-	const float INTERACT_RANGE = 1; //Range from privot where you can inteacte with objects.
+	const float INTERACT_RANGE = 1.5f; //Range from privot where you can inteacte with objects.
 	
 	public RaycastHit m_CursorHit;
-	public bool m_CursorHasHit;
-	[HideInInspector] public NetworkPlayer m_AssociatedPlayer; //Joueur du réseau se servent de l'objet comme avatar.
+	[HideInInspector]public bool m_CursorHasHit;
+	[HideInInspector]public NetworkPlayer m_AssociatedPlayer; //Joueur du réseau se servent de l'objet comme avatar.
 	[HideInInspector]public Camera m_Cam; //Camera observant cet objet.
 	public GameObject m_Body; //Objet visuel contenant les animations.
 	public Transform m_Cursor;//Objet qui détermine ou le crusor est.
 	public SkillTree m_SkillTreePrefab;
-	public float[] m_Test; //Liste temporaire afin d'ajuster des paramètres en temps réel ###TEMPORAIRE###
-	//public Item[] m_Inventory;//Inventaire du joueur.
-	public Inventory m_Inventory;
+	[HideInInspector]public Inventory m_Inventory;
 	public GameObject m_PlayerMenuView;
+	public GameObject m_InGameOnlyUI;
 	public InventoryView m_InventoryView;
+	public ActionsView m_ActionSlotView;
+	public HealthMonitorView m_HealthMonitorView;
 	public int[] m_InventoryGUI; //Mesures pour l'affichage de l'inventaire.
 	[HideInInspector]public bool m_ShowInventory = false;//Indicateur d'affichage de l'inventaire (Affiché/caché).
 	[HideInInspector]private bool m_ShowBulletSupplies = true;
 	[HideInInspector]private bool m_ShowSkillTree = true;
 	[HideInInspector]public bool m_IsBuilding = false; //Indicateur du mode contruction (Construit/Ne construit pas).
 	[HideInInspector]public Builder m_Builder;
-	
-	//Contextual Action
-	private string m_ContextualActionName = ""; //Nom de l'action contextuelle à afficher.
-	private Color m_ContextualActionColor;//Couleur de l'action contextuelle à afficher.
 
 	//Fear
-	[HideInInspector]public float m_Fear = 0f; //Quantitée de peur affectant le joueur.
+	[HideInInspector]private float m_Fear = 0f; //Quantitée de peur affectant le joueur.
 	private float m_BaseFear = 0f; //Quantité de peur cummulée.
 	[HideInInspector]public float m_FearModifier = 0f; //Quantité de peur obtenue par seconde.
 	
-	[HideInInspector]public Vector2 m_ContextualMenuPos = new Vector2(-1,-1);//Position du menu contextuel lors de son appel.
-	[HideInInspector]public Item m_SelectedItem = null; //Object actuellement sélectionné.
-	
+
 	[HideInInspector]public Equippable[] m_HeldInHands = new Equippable[2]; //Objets tenus dans les mains, 0 = gauche, 1 = droite.
 	public Transform[] m_HandPositions; //Points où les objets tenus doivent se situer, 0 = gauche, 1 = droite.
 	
@@ -67,16 +62,14 @@ public class PlayerMotor : Life
 	
 	//Actions
 	[HideInInspector]public Action m_CurrentAction; //Délégué appellé lors de la completion de l'action.
-	[HideInInspector]public bool m_ActionRestrictMovement; //Indicateur pour savoir si le mouvement interrompt l'action (interrompt/n'interrompt pas)
+	[HideInInspector]private bool m_ActionRestrictMovement; //Indicateur pour savoir si le mouvement interrompt l'action (interrompt/n'interrompt pas)
 	[HideInInspector]public float m_ActionIncrementer; //Progression/seconde en pourcent de l'action.
-	[HideInInspector]public float m_ActionCompletion; //Poucentage d'action complété.
+	[HideInInspector]private float m_ActionCompletion; //Poucentage d'action complété.
 	[HideInInspector]public string m_ActionName; //Nom de l'action.
 	[HideInInspector]public bool m_RepeatAction; //Indicateur si l'action se répète automatiquement lors de la complétion.
 	
-	private QuickslotManager m_QuickSlotManager;
+	private QuickSlotManager m_QuickSlotManager;
 	[HideInInspector]public SkillTree m_SkillTree;
-	
-	private Vector2 m_LastMousePos; 
 
 	
 	//Stats
@@ -163,6 +156,31 @@ public class PlayerMotor : Life
 	{
 		return this.m_RunSpeed*this.getBonusMultiplier(Bonus.BonusType.RunSpeed);
 	}
+	public float Fear
+	{
+		get
+		{
+			return this.m_Fear;
+		}
+		set
+		{
+			this.m_Fear=value;
+			this.getObservable().notify(ObserverMessages.FearChanged,value);
+		}
+	}
+
+	public float ActionCompletion
+	{
+		get
+		{
+			return this.m_ActionCompletion;
+		}
+		set
+		{
+			this.m_ActionCompletion=value;
+			this.getObservable().notify(ObserverMessages.ActionCompletionChanged,value);
+		}
+	}
 	
 	/// <summary>
 	/// Gets or sets the threat.
@@ -183,6 +201,7 @@ public class PlayerMotor : Life
 			{
 				this.m_Threat=1;
 			}
+			this.getObservable().notify(ObserverMessages.ThreatChanged,this.m_Threat);
 		}
 	}
 		
@@ -190,7 +209,11 @@ public class PlayerMotor : Life
 	{
 		if(this.networkView.isMine)
 		{
-			this.m_QuickSlotManager = this.gameObject.AddComponent<QuickslotManager>();
+			this.m_QuickSlotManager = this.gameObject.AddComponent<QuickSlotManager>();
+			this.m_QuickSlotManager.getObservable().subscribe(this.m_ActionSlotView);
+			this.getObservable().subscribe(this.m_QuickSlotManager);
+			this.getObservable().subscribe(this.m_ActionSlotView);
+			this.getObservable().subscribe(this.m_HealthMonitorView);
 			PlayerUI.m_QuickSlotManager= this.m_QuickSlotManager;
 			PlayerUI.m_PlayerMenuView= this.m_PlayerMenuView;
 			PlayerUI.m_InventoryView= this.m_InventoryView;
@@ -214,6 +237,8 @@ public class PlayerMotor : Life
 				this.TakeBullet(EV.AmmoType.Arrow,(byte)(UnityEngine.Random.value*100));
 			}
 			Screen.showCursor=false;
+			this.Commotion=0;
+			this.Bleed=0;
 		}
 		else
 		{
@@ -244,23 +269,7 @@ public class PlayerMotor : Life
 			{
 				this.transform.position = new Vector3(this.transform.position.x,this.maxHeight-0.01f,this.transform.position.z);
 			}
-			//Activation des quickslots
-			/*if(!this.m_ShowInventory)
-			{
-				for(int i = 0;i<4;i++)
-				{
-					if(Input.GetButtonDown("QuickSlot_"+(i)))
-					{
-						QuickSlot qs = this.m_QuickSlots[i];
-						if(qs!=null)
-						{
-							this.m_SelectedItem=qs.m_Item;
-							qs.m_Item.UseAction(qs.m_ActionNumber);
-							this.m_SelectedItem=null;
-						}
-					}
-				}
-			}*/
+
 			//Obtiens les commandes directionelles.
 			float  i_horizontal = Input.GetAxis("Horizontal");
 			float i_vertical = Input.GetAxis("Vertical");
@@ -292,24 +301,26 @@ public class PlayerMotor : Life
 			
 			this.rigidbody.velocity=moveDirection*speed;
 			this.CheckStamina();
+
 			//Gère la peur
 			this.m_BaseFear+=(this.m_FearModifier*Time.deltaTime)*this.getBonusMultiplier(Bonus.BonusType.FearGain);
-			this.m_Fear=(0.1f*((this.Bleed*2)+this.Commotion+(120*this.tears))+this.m_BaseFear)*this.getBonusMultiplier(Bonus.BonusType.FearEffect);
-			if (this.m_Fear<0){this.m_Fear=0;}
+			this.Fear=(0.1f*((this.Bleed*2)+this.Commotion+(120*this.Tears))+this.m_BaseFear)*this.getBonusMultiplier(Bonus.BonusType.FearEffect);
+			if (this.Fear<0){this.Fear=0;}
+
 			//Gestion des actions en cours
-			if(this.m_ActionCompletion!=-1)
+			if(this.ActionCompletion!=-1)
 			{
 				if(this.m_ActionRestrictMovement&&(i_vertical!=0||i_horizontal!=0))
 				{
 					this.InteruptAction();
 				}
-				this.m_ActionCompletion+=this.m_ActionIncrementer*Time.deltaTime;
-				if(this.m_ActionCompletion>=100)
+				this.ActionCompletion+=this.m_ActionIncrementer*Time.deltaTime;
+				if(this.ActionCompletion>=100)
 				{
 					this.m_CurrentAction();
 					if(this.m_RepeatAction)
 					{
-						this.m_ActionCompletion=0;
+						this.ActionCompletion=0;
 					}
 					else
 					{
@@ -317,54 +328,16 @@ public class PlayerMotor : Life
 					}
 				}
 			}
-			//Gestion hiéarchique des Triggers
-			//Si on est en contact avec au moins un objet interactif.
-			/*if(this.m_InteractiveObjects.Count>0)
-			{
-				//On traite le premier objet de la liste.
-				Collider interactiveObject = (Collider)this.m_InteractiveObjects[0];
-				//Si c'est un pickup.
-				if(interactiveObject.gameObject.CompareTag("Pickup"))
-				{
-					//On affiche l'option de le prendre.
-					Item pickup = (Item) interactiveObject.gameObject.GetComponent(typeof(Item));
-					this.m_ContextualActionName = "Take "+pickup.m_ItemName;
-					this.m_ContextualActionColor= EV.QualityColor(pickup.m_ItemQuality);
-					if(Input.GetButtonDown("Action"))
-					{
-						//Si l'objet a bien été pris, on l'enlève des objet interactifs.
-						if(this.TakeItem(pickup))
-						{
-							this.m_InteractiveObjects.RemoveAt(0);
-						}
-					}
-				}
-			}
-			else
-			{
-				m_ContextualActionName="";
-			}*/
+
 			this.CursorInteraction();
 			if (Input.GetButtonDown("Inventory"))
 			{
-				this.m_SelectedItem=null;
-				this.m_ContextualMenuPos.x=-1;
 				this.m_ShowInventory=!this.m_ShowInventory;
 				this.m_PlayerMenuView.SetActive(this.m_ShowInventory);
+				this.m_InGameOnlyUI.SetActive(!this.m_ShowInventory);
 				Screen.showCursor=this.m_ShowInventory;
 				this.GetComponent<MouseLook>().enabled=!this.m_ShowInventory;
-			}
-		}
-		//Clics Effects
-		if(m_SelectedItem!=null)
-		{
-			if (Input.GetMouseButtonDown(1))
-			{
-				this.m_ContextualMenuPos=this.m_LastMousePos;
-			}
-			else if (Input.GetMouseButtonDown(0))
-			{
-				this.m_SelectedItem.UseAction(0);
+				this.getObservable().notify(ObserverMessages.InventoryStateChanged,this.m_ShowInventory);
 			}
 		}
 		//Gestion Du Threat
@@ -375,6 +348,7 @@ public class PlayerMotor : Life
 		}
 		base.OnLive();
 	}
+
 	public void TakeItem (Item p_Item)
 	{
 		this.m_Inventory.addItem(p_Item);
@@ -421,36 +395,31 @@ public class PlayerMotor : Life
 		this.m_HeldInHands[hand]=p_Equippable;
 		if(hand==0)
 		{
-			EV.gameManager.GUIMessage("Equipped :"+p_Equippable.m_ItemName+" in main",Color.white);
+			EV.gameManager.GUIMessage("Equipped :"+p_Equippable.FullName+" in main",Color.white);
 		}
 		else
 		{
-			EV.gameManager.GUIMessage("Equipped :"+p_Equippable.m_ItemName+" in off hand",Color.white);
+			EV.gameManager.GUIMessage("Equipped :"+p_Equippable.FullName+" in off hand",Color.white);
 		}
 		Transform temp_hand =this.m_HandPositions[p_Equippable.m_HeldByHand];
-		Item item = (Item)p_Equippable.GetComponent(typeof(Item));
-		int index = item.m_PossibleActionNames.IndexOf("Equip");
-		item.m_PossibleActionNames[index]="Unequip";
-		item.m_PossibleActions[index]=()=> this.Unequip(null);
 		p_Equippable.networkView.RPC("RPC_Equip",RPCMode.AllBuffered,temp_hand.networkView.viewID);
 	}
 	//Menu Called
 	public void Unequip(Equippable p_Equippable)
 	{
-		if(p_Equippable==null)
+		if (p_Equippable.m_HeldByHand != -1) 
 		{
-			p_Equippable = (Equippable)this.m_SelectedItem.GetComponent(typeof(Equippable));
-			this.m_SelectedItem=null;
+			this.networkView.RPC ("PlayHandAction", RPCMode.All, p_Equippable.m_HeldByHand, "hand_UnGrab");
+			if (p_Equippable.m_IsTwoHanded) 
+			{
+					this.networkView.RPC ("PlayHandAction", RPCMode.All, 1, "hand_UnGrab");
+			}
+			EV.gameManager.GUIMessage ("Unequipped :" + p_Equippable.FullName + ".", Color.white);
+			this.m_HeldInHands [p_Equippable.m_HeldByHand] = null;
+			p_Equippable.m_HeldByHand = -1;
+			p_Equippable.Unequip();
+			p_Equippable.networkView.RPC ("RPC_Unequip", RPCMode.AllBuffered);
 		}
-		this.networkView.RPC("PlayHandAction",RPCMode.All,p_Equippable.m_HeldByHand,"hand_UnGrab");
-		if(p_Equippable.m_IsTwoHanded){this.networkView.RPC("PlayHandAction",RPCMode.All,1,"hand_UnGrab");}
-		EV.gameManager.GUIMessage("Unequipped :"+p_Equippable.m_ItemName+".",Color.white);
-		this.m_HeldInHands[p_Equippable.m_HeldByHand]=null;
-		p_Equippable.m_HeldByHand=-1;
-		int index = p_Equippable.m_PossibleActionNames.IndexOf("Unequip");
-		p_Equippable.m_PossibleActionNames[index]="Equip";
-		p_Equippable.m_PossibleActions[index]= ()=> p_Equippable.Equip();
-		p_Equippable.networkView.RPC("RPC_Unequip",RPCMode.AllBuffered);
 	}
 	
 	private void CheckStamina()
@@ -472,11 +441,11 @@ public class PlayerMotor : Life
 	
 	public void StartAction (float p_duration, string p_name, Action p_action,bool p_restrictMovement)
 	{
-		if(this.m_ActionCompletion==-1)
+		if(this.ActionCompletion==-1)
 		{
 			this.m_RepeatAction=false;
 			this.m_ActionIncrementer=100/p_duration;
-			this.m_ActionCompletion=0;
+			this.ActionCompletion=0;
 			this.m_ActionName=p_name;
 			this.m_ActionRestrictMovement=p_restrictMovement;
 			this.m_CurrentAction=p_action;
@@ -484,6 +453,7 @@ public class PlayerMotor : Life
 			{
 				this.rigidbody.velocity=Vector3.zero;
 			}
+			this.getObservable().notify(ObserverMessages.ActionNameChange,p_name);
 		}
 		else
 		{
@@ -493,7 +463,7 @@ public class PlayerMotor : Life
 	public void InteruptAction()
 	{
 		this.m_RepeatAction=false;
-		this.m_ActionCompletion=-1;
+		this.ActionCompletion=-1;
 		this.m_CurrentAction=null;
 		this.m_ActionName="";
 		this.m_ActionIncrementer=0;
@@ -741,7 +711,7 @@ public class PlayerMotor : Life
 	private void CursorInteraction()
 	{
 
-		this.m_ContextualActionName = "";
+//		this.m_ContextualActionName = "";
 		this.m_CursorHasHit = Physics.Raycast(this.m_Cursor.position,this.m_Cursor.TransformDirection(Vector3.forward),out this.m_CursorHit,INTERACT_RANGE);
 		if(this.m_CursorHasHit)
 		{
@@ -749,8 +719,8 @@ public class PlayerMotor : Life
 			if(item!=null)
 			{
 				//On affiche l'option de le prendre.
-				this.m_ContextualActionName = "Take "+item.m_ItemName;
-				this.m_ContextualActionColor= EV.QualityColor(item.m_ItemQuality);
+				//this.m_ContextualActionName = "Take "+item.m_ItemName;
+				//this.m_ContextualActionColor= EV.QualityColor(item.m_ItemQuality);
 				if(Input.GetButtonDown("Action"))
 				{
 					this.TakeItem(item);
@@ -788,10 +758,10 @@ public class PlayerMotor : Life
 		switch(p_Bonus)
 		{
 		case Bonus.BonusType.MaxBleed:
-			this.bleedThresold=30*this.getBonusMultiplier(Bonus.BonusType.MaxBleed);
+			this.BleedThresold=30*this.getBonusMultiplier(Bonus.BonusType.MaxBleed);
 			break;
 		case Bonus.BonusType.MaxCommotion:
-			this.m_CommotionThresold=50*this.getBonusMultiplier(Bonus.BonusType.MaxCommotion);
+			this.CommotionThresold=50*this.getBonusMultiplier(Bonus.BonusType.MaxCommotion);
 			break;
 		case Bonus.BonusType.BleedRate:
 			this.bleedingRate=0.16f*this.getBonusMultiplier(Bonus.BonusType.BleedRate);

@@ -23,7 +23,7 @@ public class Integrity : Health
 	/// </summary>
 	public override void CheckCommotion()
 	{
-		if(this.Commotion>=this.m_CommotionThresold)
+		if(this.Commotion>=this.CommotionThresold)
 		{
 			m_Dead=true;
 		}

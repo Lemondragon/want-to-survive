@@ -27,18 +27,23 @@ public class InventoryView : MonoBehaviour,IObserver{
 		}
 		p_Inventory.getObservable().subscribe(this);
 		this.m_DisplayedInventory=p_Inventory;
-		this.updateAll();
+		this.updateAllButtons();
 		this.updatePageIndicator();
+		this.selectItem (null);
 	}
 
 	public void setPage(int p_Page)
 	{
-		this.m_Page=p_Page;
-		this.updatePageIndicator();
-		this.updateAll();
+		if(this.m_Page!=p_Page)
+		{
+			this.m_Page=p_Page;
+			this.selectItem(null);
+			this.updatePageIndicator();
+			this.updateAllButtons();
+		}
 	}
 
-	public void updateAll()
+	public void updateAllButtons()
 	{
 		for(int i = 0;i<this.m_ItemButtons.Length;i++)
 		{
@@ -51,7 +56,7 @@ public class InventoryView : MonoBehaviour,IObserver{
 		if(this.m_DisplayedInventory.m_Contents.Count<=this.m_Page)
 		{
 			this.m_Page=this.m_DisplayedInventory.m_Contents.Count-1;
-			this.updateAll();
+			this.updateAllButtons();
 		}
 		else
 		{
@@ -82,9 +87,10 @@ public class InventoryView : MonoBehaviour,IObserver{
 		if(p_Item!=null)
 		{
 			this.m_ActionPanel.SetActive(true);
-			this.m_SelectedName.text=p_Item.m_ItemName;
-			this.m_ActionButtons = new ActionButton[p_Item.m_PossibleActions.Count];
-			for(int i = 0 ;i<p_Item.m_PossibleActions.Count;i++)
+			this.m_SelectedName.text=p_Item.FullName;
+			this.m_ActionButtons = new ActionButton[p_Item.ActionNames.Count];
+			//Display all actions as buttons.
+			for(int i = 0 ;i<p_Item.ActionNames.Count;i++)
 			{
 				ActionButton newAction = (GameObject.Instantiate(this.m_ActionButtonPrefab.gameObject) as GameObject).GetComponent<ActionButton>();
 				newAction.transform.parent=this.m_ActionPanel.transform;
@@ -114,15 +120,53 @@ public class InventoryView : MonoBehaviour,IObserver{
 		switch (p_Message)
 		{
 			case ObserverMessages.ItemLost:
-				if(this.m_SelectedItem==p_Argument as Item) this.selectItem(null);
-				this.updateAll();
-			break;
+				if(this.m_SelectedItem!=null&&this.m_SelectedItem.Equals(p_Argument)) 
+				{
+					this.selectItem(null);
+				}
+				(p_Argument as Item).getObservable().unsubscribe(this);
+				this.updateAllButtons();
+				break;
+			case ObserverMessages.BagDispositionChanged:
+				this.updateAllButtons();
+				break;
 			case ObserverMessages.ItemGained:
-				this.updateAll();
-			break;
+				(p_Argument as Item).getObservable().subscribe(this);
+				this.updateAllButtons();
+				break;
 			case ObserverMessages.BagQuantityChange:
 				this.updatePageIndicator();
-			break;
+				break;
+			case ObserverMessages.ItemUpdated:
+				Item itm = p_Argument as Item;
+				if(itm.Equals(this.m_SelectedItem))
+				{
+					this.selectItem(itm);
+				}
+				foreach(ItemButton ib in this.m_ItemButtons)
+				{
+					if(ib.m_Item!=null&&ib.m_Item.Equals(itm))
+				   	{
+						ib.updateUI();
+					}
+				}
+				break;
+		}
+	}
+
+	public void SwapSelectedTo(ItemButton p_To)
+	{
+		if(this.m_SelectedItem!=null)
+		{
+			for(int i = 0;i<this.m_ItemButtons.Length;i++)
+			{
+				if(this.m_ItemButtons[i].Equals(p_To))
+				{
+					this.m_DisplayedInventory.Swap(this.m_DisplayedInventory.getIndexOf(this.m_SelectedItem,this.m_Page),i,this.m_Page);
+					break;
+				}
+			}
+			this.selectItem(null);
 		}
 	}
 }

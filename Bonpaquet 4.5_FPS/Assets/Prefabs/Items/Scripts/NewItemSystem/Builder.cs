@@ -47,7 +47,7 @@ public class Builder : Item {
 				{
 					this.m_LockBuildPos=true;
 					this.m_Master.StartAction(this.m_BuildTime[this.m_BuildType]/this.m_Master.getBonusMultiplier(Bonus.BonusType.BuildSpeed)
-						,"Building "+this.m_BaseName,()=>this.Task_PlaceStructure(),true);
+						,"Building "+this.BaseName,()=>this.Task_PlaceStructure(),true);
 				}
 				else
 				{
@@ -66,12 +66,12 @@ public class Builder : Item {
 			int roundedY =Mathf.RoundToInt(this.m_ShownCube.transform.position.z);
 			GameObject myNewCube=this.m_BuiltSets[this.m_BuildType].SpawnAppropriateBlock(EV.gameManager.getInnerZoneNeigboringMatrix(roundedX,roundedY),new Vector2(roundedX,roundedY));
 			myNewCube.networkView.RPC("AddToInnerZones",RPCMode.All);
-			myNewCube.GetComponent<Structure>().m_CommotionThresold*=this.m_Master.getBonusMultiplier(Bonus.BonusType.BuildIntegrity);
+			myNewCube.GetComponent<Structure>().CommotionThresold*=this.m_Master.getBonusMultiplier(Bonus.BonusType.BuildIntegrity);
 			((Block)myNewCube.GetComponent(typeof(Block))).networkView.RPC("Link",RPCMode.All);
 			this.networkView.RPC("ChangeQuantity",RPCMode.AllBuffered,-1);
 			this.m_ShownCube.ForceValidation();
 			this.m_Master.gainFocusExp(Focus.Craft,10);
-			if(this.m_ItemQuantity<=0)
+			if(this.Quantity<=0)
 			{
 				this.EndBuild();
 				Network.Destroy(this.gameObject);

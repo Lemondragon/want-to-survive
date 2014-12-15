@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class QuickslotManager : MonoBehaviour,IObserver{
+public class QuickSlotManager : MonoBehaviour,IObserver{
 
-	private QuickSlot[] m_QuickSlots = new QuickSlot[8]; //Actions rapides.
+	private QuickSlot[] m_QuickSlots = new QuickSlot[8]; //Actions rapides.«
+	private Observable m_Observable = new Observable();
+	private bool m_ShortcutsActive = true;
 	/// <summary>
 	/// Classe représentant une action rapide.
 	/// </summary>
@@ -35,6 +37,12 @@ public class QuickslotManager : MonoBehaviour,IObserver{
 	public void setQuickSlot(Item p_Item, int p_ActionNumber,int p_Quickslot)
 	{
 		this.m_QuickSlots[p_Quickslot]= new QuickSlot(p_Item,(byte)p_ActionNumber);
+		this.m_Observable.notify (ObserverMessages.QuickSlotUpdated, p_Quickslot);
+	}
+
+	public Observable getObservable()
+	{
+		return this.m_Observable;
 	}
 
 	public void dismissQuickSlotsOf(Item p_Item)
@@ -44,19 +52,37 @@ public class QuickslotManager : MonoBehaviour,IObserver{
 			if(this.m_QuickSlots[i]!=null&&this.m_QuickSlots[i].m_Item.Equals(p_Item))
 			{
 				this.m_QuickSlots[i]=null;
+				this.m_Observable.notify(ObserverMessages.QuickSlotUpdated,i);
 			}
 		}
 	}
 
+	public void useQuickSlot(int p_Quickslot)
+	{
+		if(this.m_QuickSlots[p_Quickslot]!=null)
+		{
+			this.m_QuickSlots[p_Quickslot].Execute();
+		}
+	}
+
+	public Sprite getQuickSlotIcon(int p_QuickSlot)
+	{
+		if (this.m_QuickSlots [p_QuickSlot] != null) 
+		{
+			return this.m_QuickSlots[p_QuickSlot].m_Item.Image;
+		}
+		return null;
+	}
+
 	public void Update()
 	{
-		for (int j = 0;j<8;j++)
+		if(this.m_ShortcutsActive)
 		{
-			if(Input.GetButtonDown("QuickSlot_"+(j)))
+			for (int j = 0;j<8;j++)
 			{
-				if(this.m_QuickSlots[j]!=null)
+				if(Input.GetButtonDown("QuickSlot_"+(j)))
 				{
-					this.m_QuickSlots[j].Execute();
+					this.useQuickSlot(j);
 				}
 			}
 		}
@@ -68,6 +94,9 @@ public class QuickslotManager : MonoBehaviour,IObserver{
 		{
 		case ObserverMessages.ItemLost:
 			this.dismissQuickSlotsOf(p_Argument as Item);
+			break;
+		case ObserverMessages.InventoryStateChanged:
+			this.m_ShortcutsActive=!((bool)p_Argument);
 			break;
 		}
 	}

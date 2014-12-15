@@ -25,7 +25,14 @@ public class Observable {
 
 	public void subscribe(IObserver p_Observer)
 	{
-		this.m_Observers.Add(p_Observer);
+		if(p_Observer==null)
+		{
+			Debug.LogError("Tried to add a null Observer.");
+		}
+		else
+		{
+			this.m_Observers.Add(p_Observer);
+		}
 	}
 
 	public void unsubscribeAll()

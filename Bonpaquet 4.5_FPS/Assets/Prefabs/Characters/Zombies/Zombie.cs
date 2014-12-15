@@ -165,7 +165,7 @@ public class Zombie : Life {
 			Melee sourceMelee = sourceWeapon as Melee;
 			if(sourceMelee!=null)
 			{
-				sourceMelee.m_Master.networkView.RPC("RPC_GenerateThreat",RPCMode.All,p_amount*THREAT_GAIN_PER_MELEE_DAMAGE);
+				sourceMelee.Master.networkView.RPC("RPC_GenerateThreat",RPCMode.All,p_amount*THREAT_GAIN_PER_MELEE_DAMAGE);
 			}
 		}
 	}

@@ -76,7 +76,7 @@ public class Clip : Item
 			}
 			else
 			{
-				EV.gameManager.GUIMessage("The "+concernedItem.m_ItemName+" do not use clips.",Color.red);
+				EV.gameManager.GUIMessage("The "+concernedItem.FullName+" do not use clips.",Color.red);
 			}
 		}
 		else
@@ -98,12 +98,12 @@ public class Clip : Item
 	{
 		if(this.m_Bullets.Count>0)
 		{
-			this.m_Master.StartAction(0.1f,"Unload "+this.m_ItemName,() => this.Task_Unload(),false);
+			this.m_Master.StartAction(0.1f,"Unload "+this.FullName,() => this.Task_Unload(),false);
 			this.m_Master.m_RepeatAction=true;
 		}
 		else
 		{
-			EV.gameManager.GUIMessage(this.m_ItemName+" is already Unloaded.",Color.yellow);
+			EV.gameManager.GUIMessage(this.FullName+" is already Unloaded.",Color.yellow);
 		}
 	}
 	
@@ -120,7 +120,7 @@ public class Clip : Item
 		else
 		{
 			this.m_Master.InteruptAction();
-			EV.gameManager.GUIMessage(this.m_ItemName+" is Unloaded.",Color.yellow);
+			EV.gameManager.GUIMessage(this.FullName+" is Unloaded.",Color.yellow);
 		}
 	}
 	
@@ -137,7 +137,7 @@ public class Clip : Item
 			int quantityLeft = (((PlayerMotor.BulletSupplies)this.m_Master.m_BulletSupplies[this.m_AmmoType]).supplies[p_Quality]as Stack).Count;
 			if(quantityLeft>0)
 			{
-				this.m_Master.StartAction(1.5f/this.m_Master.getBonusMultiplier(Bonus.BonusType.FillClipSpeed),"Loading "+this.m_ItemName+" with "+EV.QualityBulletName(p_Quality)+" bullets.",() => this.Task_Fill(p_Quality),true);
+				this.m_Master.StartAction(1.5f/this.m_Master.getBonusMultiplier(Bonus.BonusType.FillClipSpeed),"Loading "+this.FullName+" with "+EV.QualityBulletName(p_Quality)+" bullets.",() => this.Task_Fill(p_Quality),true);
 				this.m_Master.m_RepeatAction= true;
 			}
 			else
@@ -159,7 +159,7 @@ public class Clip : Item
 		{
 			if(this.m_Bullets.Count>=this.m_MagSize)
 			{
-				EV.gameManager.GUIMessage("Filled "+this.m_ItemName+".",Color.yellow);
+				EV.gameManager.GUIMessage("Filled "+this.FullName+".",Color.yellow);
 			}
 			else
 			{
@@ -178,11 +178,11 @@ public class Clip : Item
 		if(this.m_Bullets.Count==0)
 		{
 			temp = "Empty ";
-			this.m_ItemQuality=EV.ItemQuality.Junk;
+			this.Quality=EV.ItemQuality.Junk;
 		}
 		else
 		{
-			temp=EV.QualityBulletName(this.m_ItemQuality)+" ";
+			temp=EV.QualityBulletName(this.Quality)+" ";
 		}
 		
 		temp += this.m_AmmoType.ToString()+" Clip";
@@ -190,7 +190,7 @@ public class Clip : Item
 		{
 			temp+=" ("+this.m_Bullets.Count+")";
 		}
-		this.m_ItemName=temp;
+		this.FullName=temp;
 	}
 	
 	[RPC]
@@ -216,13 +216,13 @@ public class Clip : Item
 		{
 			this.m_Bullets=new Stack();
 		}
-		if(this.m_Bullets.Count==0||this.m_ItemQuality==quality)
+		if(this.m_Bullets.Count==0||this.Quality==quality)
 		{
-			this.m_ItemQuality=quality;
+			this.Quality=quality;
 		}
 		else
 		{
-			this.m_ItemQuality=EV.ItemQuality.Junk;
+			this.Quality=EV.ItemQuality.Junk;
 		}
 		if(this.m_Bullets==null)
 		{

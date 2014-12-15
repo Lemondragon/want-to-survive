@@ -21,7 +21,7 @@ public class FireArm_Clip : FireArm
 		}
 		else
 		{
-			EV.gameManager.GUIMessage(this.m_ItemName+" is Empty.",Color.red);
+			EV.gameManager.GUIMessage(this.FullName+" is Empty.",Color.red);
 			networkView.RPC("RPC_PlaySound",RPCMode.All,1);
 		}
 	}
@@ -31,11 +31,11 @@ public class FireArm_Clip : FireArm
 		bool answer = false;
 		if(p_Clip.m_AmmoType==this.m_AmmoType)
 		{
-			this.m_Master.StartAction(this.m_ReloadSpeed/this.m_Master.getBonusMultiplier(Bonus.BonusType.FillClipSpeed),"Reload "+this.m_ItemName,()=>this.Task_Reload(p_Clip),false);
+			this.m_Master.StartAction(this.m_ReloadSpeed/this.m_Master.getBonusMultiplier(Bonus.BonusType.FillClipSpeed),"Reload "+this.FullName,()=>this.Task_Reload(p_Clip),false);
 		}
 		else
 		{
-			EV.gameManager.GUIMessage(this.m_ItemName+" cannot use "+p_Clip.m_AmmoType.ToString()+" clips.",Color.red);
+			EV.gameManager.GUIMessage(this.FullName+" cannot use "+p_Clip.m_AmmoType.ToString()+" clips.",Color.red);
 		}
 		return answer;
 	}
@@ -55,7 +55,7 @@ public class FireArm_Clip : FireArm
 		}
 		else
 		{
-			EV.gameManager.GUIMessage(this.m_ItemName+" cannot use "+p_Clip.m_AmmoType.ToString()+" clips.",Color.red);
+			EV.gameManager.GUIMessage(this.FullName+" cannot use "+p_Clip.m_AmmoType.ToString()+" clips.",Color.red);
 		}
 		return answer;
 	}
@@ -65,11 +65,11 @@ public class FireArm_Clip : FireArm
 	{
 		if(this.m_Clip!=null)
 		{
-			this.m_Master.StartAction(this.m_ReloadSpeed/2,"Unload "+this.m_ItemName,() => this.Task_RemoveClip(),false);
+			this.m_Master.StartAction(this.m_ReloadSpeed/2,"Unload "+this.FullName,() => this.Task_RemoveClip(),false);
 		}
 		else
 		{
-			EV.gameManager.GUIMessage(this.m_ItemName+" have no clip to be removed.",Color.yellow);
+			EV.gameManager.GUIMessage(this.FullName+" have no clip to be removed.",Color.yellow);
 		}
 	}
 	public void Task_RemoveClip()
@@ -81,7 +81,7 @@ public class FireArm_Clip : FireArm
 		}
 		else
 		{
-			EV.gameManager.GUIMessage(this.m_ItemName+" have no clip to be removed.",Color.yellow);
+			EV.gameManager.GUIMessage(this.FullName+" have no clip to be removed.",Color.yellow);
 		}
 	}
 	[RPC]

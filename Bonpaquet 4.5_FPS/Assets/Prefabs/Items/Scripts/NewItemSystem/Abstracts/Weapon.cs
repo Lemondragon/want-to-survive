@@ -16,6 +16,13 @@ public abstract class Weapon : Equippable
 	/// </param>
 	abstract public void onHit(GameObject p_Victim,float p_Power);
 
+	protected void CreateImpact(Health p_Target,Vector3 p_Pos)
+	{
+		if(p_Target.getImpactEffect()!=null)
+		{
+			Network.Instantiate(p_Target.getImpactEffect(),p_Pos,Quaternion.identity,0);
+		}
+	}
 }
 
 

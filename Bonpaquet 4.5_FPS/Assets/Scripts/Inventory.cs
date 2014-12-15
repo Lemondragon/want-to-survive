@@ -15,10 +15,10 @@ public class Inventory : Container,IObserver {
 		switch(p_Message)
 		{
 			case ObserverMessages.ItemStacked:
-				EV.gameManager.GUIMessage("You recieved more :"+item.m_ItemName,EV.QualityColor(item.m_ItemQuality));
+				EV.gameManager.GUIMessage("You recieved more :"+item.FullName,EV.QualityColor(item.Quality));
 			break;
 			case ObserverMessages.ItemGained:
-				EV.gameManager.GUIMessage("You recieved :"+item.m_ItemName,EV.QualityColor(item.m_ItemQuality));
+				EV.gameManager.GUIMessage("You recieved :"+item.FullName,EV.QualityColor(item.Quality));
 			break;
 		}
 	}

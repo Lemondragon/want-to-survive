@@ -14,18 +14,16 @@ public class ItemButton : MonoBehaviour {
 	{
 		if(m_Item!=null)
 		{
-			this.m_Button.interactable=true;
-			this.m_QualityImg.color= EV.QualityColor(this.m_Item.m_ItemQuality);
+			this.m_QualityImg.color= EV.QualityColor(this.m_Item.Quality);
 			this.m_ItemLogo.enabled=true;
-			this.m_ItemLogo.sprite = this.m_Item.m_ItemImage;
-			if(this.m_Item.m_ItemQuantity>1)
-				this.m_QteText.text="X "+this.m_Item.m_ItemQuantity;
+			this.m_ItemLogo.sprite = this.m_Item.Image;
+			if(this.m_Item.Quantity>1)
+				this.m_QteText.text="X "+this.m_Item.Quantity;
 			else
 				this.m_QteText.text="";
 		}
 		else
 		{
-			this.m_Button.interactable=false;
 			this.m_QualityImg.color= Color.red;
 			this.m_ItemLogo.enabled=false;
 			this.m_QteText.text="";
@@ -34,13 +32,24 @@ public class ItemButton : MonoBehaviour {
 
 	public void click()
 	{
-		if(PlayerUI.m_InventoryView.getSelected()==this.m_Item)
+		if(Input.GetButton("Alt"))
 		{
-			this.m_Item.UseAction(0);
+			if(PlayerUI.m_InventoryView.getSelected()!=null)
+			{
+				PlayerUI.m_InventoryView.SwapSelectedTo(this);
+			}
 		}
-		else
+		else if(this.m_Item!=null)
 		{
-			PlayerUI.m_InventoryView.selectItem(this.m_Item);
+			if(PlayerUI.m_InventoryView.getSelected()==this.m_Item)
+			{
+				this.m_Item.UseAction(0);
+			}
+			else
+			{
+				PlayerUI.m_InventoryView.selectItem(this.m_Item);
+			}
 		}
+
 	}
 }

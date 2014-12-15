@@ -92,7 +92,23 @@ public abstract class Equippable : Item {
 	public virtual void Equip()
 	{
 		this.m_Master.Equip(this);
+		int index = this.ActionNames.IndexOf("Equip");
+		this.ActionNames[index]="Unequip";
+		this.m_PossibleActions[index]=()=> this.Unequip();
 		this.m_Master.networkView.RPC("PlayHandAction",RPCMode.All,this.m_HeldByHand,"hand_Grab");
+		this.getObservable().notify(ObserverMessages.ItemUpdated,this);
+	}
+
+	public virtual void Unequip()
+	{
+		this.m_Master.Unequip(this);
+		int index = this.m_PossibleActionNames.IndexOf("Unequip");
+		if(index>=0)
+		{
+			this.m_PossibleActionNames [index] = "Equip";
+			this.m_PossibleActions [index] = () => this.Equip ();
+			this.getObservable().notify(ObserverMessages.ItemUpdated,this);
+		}
 	}
 	
 	/// <summary>

@@ -8,22 +8,34 @@ public abstract class Health : MonoBehaviour
 {
 
 	public AudioClip m_HitSound;
-	protected Observable m_Observable = new Observable();
+	[SerializeField]
+	private GameObject m_ImpactEffect;
+	private Observable m_Observable = new Observable();
 	private float m_Bleed = 0f; //Quantité de Bleed.
 	private float m_Commotion = 0f; //Quantité de Commotion.
-	public float m_CommotionThresold = 50f; //Commotion maximale avant la mort.
+	private float m_CommotionThresold = 50f; //Commotion maximale avant la mort.
 	[HideInInspector]public bool m_Dead = false; //Indicateur d'état (vie/mort).
 
 	void Update () 
 	{
-		if(!m_Dead)//N'update pas si il est mort.
-		{
-			this.OnLive();
-		}
-		else
+		if(m_Dead)//N'update pas si il est mort.
 		{
 			this.OnDeath();
 		}
+		else
+		{
+			this.OnLive();
+		}
+	}
+
+	public Observable getObservable()
+	{
+		return this.m_Observable;
+	}
+
+	public GameObject getImpactEffect()
+	{
+		return this.m_ImpactEffect;
 	}
 	
 	/// <summary>
@@ -61,9 +73,10 @@ public abstract class Health : MonoBehaviour
 		{
 			this.m_Bleed=value;
 			this.CheckBleed();
+			this.getObservable().notify(ObserverMessages.BleedChanged,value);
 		}
 	}
-	
+
 	public float Commotion
 	{
 		get
@@ -74,6 +87,21 @@ public abstract class Health : MonoBehaviour
 		{
 			this.m_Commotion=value;
 			this.CheckCommotion();
+			this.getObservable().notify(ObserverMessages.CommotionChanged,value);
+		}
+	}
+
+	public float CommotionThresold
+	{
+		get
+		{
+			return this.m_CommotionThresold;
+		}
+		set
+		{
+			this.m_CommotionThresold=value;
+			this.CheckCommotion();
+			this.getObservable().notify(ObserverMessages.CommotionThresoldChanged,value);
 		}
 	}
 	public virtual void OnHit(bool p_isBleed,float p_amount,GameObject p_Source){}

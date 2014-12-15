@@ -19,7 +19,9 @@ public class ActionButton : MonoBehaviour {
 	{
 		if(this.m_Item!=null)
 		{
-			this.GetComponentInChildren<Text>().text=this.m_Item.m_PossibleActionNames[this.m_ActionNumber];
+			Text component = this.GetComponentInChildren<Text>();
+			if(component!=null)
+			{component.text=this.m_Item.ActionNames[this.m_ActionNumber];}
 		}
 		else
 		{

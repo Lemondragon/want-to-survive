@@ -31,7 +31,7 @@ public class FireArm_DirectAmmo : FireArm {
 		}
 		else
 		{
-			EV.gameManager.GUIMessage(this.m_ItemName+" is Empty.",Color.red);
+			EV.gameManager.GUIMessage(this.FullName+" is Empty.",Color.red);
 			networkView.RPC("RPC_PlaySound",RPCMode.All,1);
 		}
 	}
@@ -43,7 +43,7 @@ public class FireArm_DirectAmmo : FireArm {
 		{
 			if(((PlayerMotor.BulletSupplies)this.m_Master.m_BulletSupplies[this.m_AmmoType]).supplies[p_Quality].Count>0)
 			{
-				this.m_Master.StartAction(this.m_ReloadSpeed,"Reload "+this.m_ItemName+" with "+EV.QualityBulletName(p_Quality)+" bullets.",()=>this.Task_Reload(p_Quality),false);
+				this.m_Master.StartAction(this.m_ReloadSpeed,"Reload "+this.FullName+" with "+EV.QualityBulletName(p_Quality)+" bullets.",()=>this.Task_Reload(p_Quality),false);
 				this.m_Master.m_RepeatAction=true;
 			}
 			else
@@ -90,12 +90,12 @@ public class FireArm_DirectAmmo : FireArm {
 	{
 		if(this.m_Bullets.Count>0)
 		{
-			this.m_Master.StartAction(this.m_ReloadSpeed,"Unload "+this.m_ItemName,()=>this.Task_Unload(),false);
+			this.m_Master.StartAction(this.m_ReloadSpeed,"Unload "+this.FullName,()=>this.Task_Unload(),false);
 			this.m_Master.m_RepeatAction=true;
 		}
 		else
 		{
-			EV.gameManager.GUIMessage("Cannot unload: "+this.m_ItemName+" is empty,",Color.red);
+			EV.gameManager.GUIMessage("Cannot unload: "+this.FullName+" is empty,",Color.red);
 		}
 	}
 	

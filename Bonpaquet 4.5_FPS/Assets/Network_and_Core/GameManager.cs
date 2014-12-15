@@ -5,16 +5,14 @@ public class GameManager : MonoBehaviour
 {
 	
 	const int ZOMBIE_POS_TRIES = 10;
-	const int ZOMBIE_SPAWN_COST = 50;
+	const int ZOMBIE_SPAWN_MIN_DISTANCE = 5;
+	const int ZOMBIE_SPAWN_COST = 120;
 	const int PLAYER_VIEW_ANGLE = 40;//Amount of degrees from the center of the player views that will prevent zombie spawns.
 	
 	ArrayList m_MessageList;
 	float m_MessageExpiration = 0f;
 	int m_LastLevelPrefix=0;
 	bool m_LoadingLevel = false;
-	//float m_NextZombieSpawn = 0f;
-	//float m_ZombieSpawnRate = 30f;
-	//GameObject[] m_ZombieSpawns;
 	public GameObject m_StandardZombiePrefab;
 	public bool m_KeepAllMessages=false;
 	
@@ -33,7 +31,7 @@ public class GameManager : MonoBehaviour
 	
 	//World Data
 	public Zone[,] m_MapZones;
-	private float m_Threat = 500;
+	private float m_Threat = 0;
 	public int m_MaxZombies = 20;
 	private int m_ZombieCount = 0;
 	
@@ -96,6 +94,7 @@ public class GameManager : MonoBehaviour
 						Transform playTrans = pi.m_PlayerMotor.transform;
 						float angle =Mathf.Abs(Vector3.Angle(playTrans.TransformDirection(Vector3.forward),playTrans.position-pos));
 						valid&=angle>PLAYER_VIEW_ANGLE;
+						valid&=ZOMBIE_SPAWN_MIN_DISTANCE<=Vector3.Distance(playTrans.position,pos);
 					}
 					tries++;
 				}while(!valid&&tries<ZOMBIE_POS_TRIES);
@@ -157,17 +156,7 @@ public class GameManager : MonoBehaviour
 				this.m_MessageExpiration=Time.time+(3/(this.m_MessageList.Count+1));
 			}
 		}
-		
-		/*if(Network.isServer&&EV.networkManager.m_IsInGame)
-		{
-			//Spawn Zombies
-			if(Time.time>this.m_NextZombieSpawn)
-			{
-				Network.Instantiate(m_StandardZombiePrefab,this.m_ZombieSpawns[(int)Mathf.Floor(this.m_ZombieSpawns.Length*Random.value)].transform.position,Quaternion.identity,0);
-				m_NextZombieSpawn=Time.time+(60/this.m_ZombieSpawnRate);
-			}
-		}*/
-		
+
 		if(this.m_Sun!=null)
 		{
 			//DayLight 
@@ -215,8 +204,6 @@ public class GameManager : MonoBehaviour
 		if(level!=0)
 		{
 			EV.networkManager.InitializePlayer(Network.player);
-			//this.m_ZombieSpawns=GameObject.FindGameObjectsWithTag("ZombieSpawn");
-			//this.m_NextZombieSpawn=Time.time+2;
 			EV.networkManager.m_IsInGame=true;
 			if(Network.isClient)
 			{
@@ -262,11 +249,8 @@ public class GameManager : MonoBehaviour
 	/// </param>
 	public void GUIMessage(string p_Message,Color p_color)
 	{
-		/*if(this.m_MessageList.Count==0||((Message)this.m_MessageList[this.m_MessageList.Count-1]).m_Message!=p_Message)
-		{*/
-			this.m_MessageExpiration = Time.time+3;
-			this.m_MessageList.Add(new Message(p_Message,p_color));
-		//}
+		this.m_MessageExpiration = Time.time+3;
+		this.m_MessageList.Add(new Message(p_Message,p_color));
 	}
 	
 	public void signalZombieDeath()
@@ -356,7 +340,6 @@ public class GameManager : MonoBehaviour
 	{
 		if(Network.isServer)
 		{
-			Debug.Log("Player out");
 			Network.Destroy(EV.networkManager.m_PlayerInfos[player].m_PlayerMotor.gameObject);
 			EV.networkManager.m_PlayerInfos.Remove(player);
 			if(EV.networkManager.m_PlayerInfos.Count==0)
