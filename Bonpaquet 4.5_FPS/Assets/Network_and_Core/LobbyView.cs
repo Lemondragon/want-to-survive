@@ -30,6 +30,9 @@ public class LobbyView : MonoBehaviour
 		this.m_Canevas[p_View].gameObject.SetActive(true);
 		switch(this.m_ActiveView)
 		{
+		case 2:
+			this.refreshHostList();
+			break;
 		case 3:
 			this.showLevelList();
 			break;
@@ -89,7 +92,8 @@ public class LobbyView : MonoBehaviour
 			RectTransform trans = map.transform as RectTransform;
 			trans.parent=this.m_MapPanel.transform;
 			trans.localScale= new Vector3(1,1,1);
-			trans.localPosition= new Vector3(0,-5+(34*(i+1)),0);
+			trans.localPosition= new Vector3(0,30+(34*(i)),0);
+			trans.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top,10+(30*i),30);
 			trans.sizeDelta=new Vector2(-18,34);
 			
 			MapLabel mapLabel = map.GetComponent<MapLabel>();

@@ -118,106 +118,7 @@ public class NetworkManager : MonoBehaviour
 	{
 		Network.Connect(p_Host);
 	}
-	/*
-	void OnGUI () 
-	{
 
-		if (m_IsInGame) //Lorsque en jeu, l'apport visuel du NetworkManager se limite au MainMenu.
-		{
-			if(this.m_ShowMenu)
-			{//MAIN MENU GUI
-				if(GUI.Button(EV.relativeRect(5,5,15,3),"Disconnect"))//Bouton pour se déconnecter du serveur.
-				{
-					this.disconnect();
-				}
-			}
-		}
-		else //Lorsqu'on est pas en jeu.
-		{
-			GUI.color=Color.white;
-			GUI.Label(EV.relativeRect(10,70,50,4),this.m_ConsoleMessage);//On montre le m_ConsoleMessage.
-			
-			if(Network.isClient||Network.isServer)//Si on est connecté à un serveur (Dans le lobby).
-			{//Lobby
-				//Color Selection
-				GUI.color=new Color(this.m_MyColor.x,this.m_MyColor.y,this.m_MyColor.z);
-				GUI.Box(EV.relativeRect(74,5,50,14),"Color");
-				float col_x  = GUI.HorizontalSlider(EV.relativeRect(80,9 ,40,3),this.m_MyColor.x,0.1f,0.9f);
-				float col_y  = GUI.HorizontalSlider(EV.relativeRect(80,12,40,3),this.m_MyColor.y,0.1f,0.9f);
-				float col_z  = GUI.HorizontalSlider(EV.relativeRect(80,15,40,3),this.m_MyColor.z,0.1f,0.9f);
-				if(!this.m_MyColor.Equals(new Vector3(col_x,col_y,col_z)))//Si un changement de couleur s'est produit, on met a jour localement et via le réseau. 
-				{
-					this.m_MyColor=new Vector3(col_x,col_y,col_z);
-					this.networkView.RPC("RPC_SetLobbyColor",RPCMode.All,Network.player,m_MyColor);
-				}
-				
-				
-				//Show Connected Players
-				GUI.color=Color.white;
-				GUI.Box(EV.relativeRect(5,5,30,30),"Lobby :"+this.m_ServerName);
-				//On montre 4 emplacements disponibles (le counter monte jusqu'a 3 maximum).
-				int counter = 0;
-				string label;
-				foreach(PlayerInfos pi in this.m_PlayerInfos.Values)//Pour tous les joueurs connus.
-				{
-					label = pi.m_Name;
-					if (Network.isServer&&pi.m_AssociatedPlayer!=Network.player)//Le serveur peut expulser les joueurs (excepté lui-même).
-					{
-						GUI.color=Color.red;
-						if(GUI.Button(EV.relativeRect(25,10+(5*counter),8,3),"Kick"))
-						{
-							this.kickPlayer(pi.m_AssociatedPlayer);
-						}
-					}
-					GUI.color=pi.m_Color; //La couleur du nom et celle du joueur.
-					GUI.Label(EV.relativeRect(10,10+(5*counter),15,3),label);//On montre le nom du joueur.
-					counter++;
-				}
-				while (counter<4)//Si il n'y a pas assez de joueurs pour remplir les 4 emplacements. On montre une emplacement par défaut gris indiqué "Slot available".
-				{
-					GUI.color = Color.gray;
-					label ="Slot Available";
-					GUI.Label(EV.relativeRect(10,10+(5*counter),15,3),label);
-					counter++;
-				}
-				
-				if(Network.isServer)//Le serveur peut commencer la partie.
-				{
-					if(GUI.Button(EV.relativeRect(10,30,10,3),"Start"))
-					{
-						this.startGame();
-
-					}
-				}
-			}
-			else if (!Network.isClient&&!Network.isServer) //Si l'on est ni en jeu ni dans un lobby, on est a l'acceuil.
-			{//HOME
-				this.m_ServerName = GUI.TextField(EV.relativeRect(25,5,30,3),this.m_ServerName); //On permet la sélection d'un nom de serveur qui sera utilisé si on en démarre un.
-				this.m_MyName = GUI.TextField(EV.relativeRect(25,10,30,3),this.m_MyName); //On permet la sélection d'un nom qui ne sera plus modifiable une fois connecté.
-				if(GUI.Button(EV.relativeRect(5,5,15,3),"Start Server")) //On peut démarrer un serveur.
-				{
-					this.m_ConsoleMessage="Starting Server...";
-					this.StartServer();
-				}
-				if(GUI.Button(EV.relativeRect(5,10,15,3),"Refresh Hosts")) //On peut demander la liste des serveurs actuellement disponibles.
-				{
-					this.RefreshHostList();
-				}
-				
-				int serverNumber = 0;
-				foreach (HostData host in this.m_HostData)//On montre les serveurs trouvés.
-				{
-					if(GUI.Button(EV.relativeRect(25,15+(5*serverNumber),25,3),host.gameName+"("+host.connectedPlayers+"/"+host.playerLimit+")"))//Si l'on clique sur un, on s'y connecte.
-					{
-						this.connect(host);
-					}
-					serverNumber++;
-				}
-			}
-		}
-
-	}
-	*/
 	/// <summary>
 	/// Refreshs the host list.
 	/// </summary>
@@ -344,6 +245,10 @@ public class NetworkManager : MonoBehaviour
 		GameObject PlayerObject = NetworkView.Find(p_viewID).gameObject;
 		PlayerMotor playerMotor = (PlayerMotor)PlayerObject.GetComponent(typeof(PlayerMotor));
 		playerMotor.m_AssociatedPlayer=p_Player;
+		if (p_Player != Network.player) 
+		{
+			playerMotor.DestroyUI ();
+		}
 		foreach(Renderer r in PlayerObject.GetComponentsInChildren(typeof(Renderer)))
 		{
 			r.material.SetColor("_Color",new Color(p_MainColor.x,p_MainColor.y,p_MainColor.z,1));
@@ -433,7 +338,9 @@ public class NetworkManager : MonoBehaviour
 	[RPC]
 	public void RPC_NewPlayerHasDisconnected (NetworkPlayer p_NetworkPlayer)
 	{
+		Destroy (this.m_PlayerInfos [p_NetworkPlayer].m_PlayerMotor.gameObject);
 		this.m_PlayerInfos.Remove(p_NetworkPlayer);
+
 		if(this.m_LobbyView!=null)
 		{
 			this.m_LobbyView.updatePlayerLabels();

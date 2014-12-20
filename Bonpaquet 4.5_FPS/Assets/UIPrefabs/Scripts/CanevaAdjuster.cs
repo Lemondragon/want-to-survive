@@ -2,12 +2,13 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class CanevaSpaceShrinker : MonoBehaviour {
+public class CanevaAdjuster : MonoBehaviour {
 
 	void Start () 
 	{
 		Canvas can = this.GetComponent<Canvas>();
-		can.planeDistance=can.worldCamera.nearClipPlane+0.001f;
+		can.transform.parent = null;
+		//can.planeDistance=can.worldCamera.nearClipPlane+0.001f;
 		Destroy(this);
 	}
 

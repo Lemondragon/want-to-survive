@@ -22,6 +22,7 @@ public class PlayerMotor : Life
 	public Transform m_Cursor;//Objet qui détermine ou le crusor est.
 	public SkillTree m_SkillTreePrefab;
 	[HideInInspector]public Inventory m_Inventory;
+	public Canvas m_UI;
 	public GameObject m_PlayerMenuView;
 	public GameObject m_InGameOnlyUI;
 	public InventoryView m_InventoryView;
@@ -242,28 +243,36 @@ public class PlayerMotor : Life
 		}
 		else
 		{
-			Destroy(this.m_PlayerMenuView);
+			this.DestroyUI();
 		}
+	}
+
+	public void DestroyUI()
+	{
+		Destroy (this.GetComponentInChildren<Camera> ().gameObject);
+		Destroy (this.GetComponent<MouseLook> ());
+		Destroy(this.m_PlayerMenuView);
+		Destroy(this.m_UI.gameObject);
 	}
 	// Update is called once per frame
 	public override void OnLive ()
 	{
-		//Gérer la régénération
-		if(this.getBonusMultiplier(Bonus.BonusType.BleedRegen)!=0)
-		{
-			this.Bleed-=(this.getBonusMultiplier(Bonus.BonusType.BleedRegen)-1)*Time.deltaTime;
-		}
-		if(this.getBonusMultiplier(Bonus.BonusType.CommotionRegen)!=0)
-		{
-			this.Commotion-=(this.getBonusMultiplier(Bonus.BonusType.CommotionRegen)-1)*Time.deltaTime;
-		}
-		//Limitation de souris
-		this.m_MouseClick=Input.GetMouseButtonDown(0);
-		//Gestion des animations
-		//m_Body.animation["Body_Walk"].speed= this.rigidbody.velocity.magnitude/3;
-		
 		if(this.networkView.isMine)
 		{
+			//Gérer la régénération
+			if(this.getBonusMultiplier(Bonus.BonusType.BleedRegen)!=0)
+			{
+				this.Bleed-=(this.getBonusMultiplier(Bonus.BonusType.BleedRegen)-1)*Time.deltaTime;
+			}
+			if(this.getBonusMultiplier(Bonus.BonusType.CommotionRegen)!=0)
+			{
+				this.Commotion-=(this.getBonusMultiplier(Bonus.BonusType.CommotionRegen)-1)*Time.deltaTime;
+			}
+			//Limitation de souris
+			this.m_MouseClick=Input.GetMouseButtonDown(0);
+			//Gestion des animations
+			//m_Body.animation["Body_Walk"].speed= this.rigidbody.velocity.magnitude/3;
+
 			//Correction d'une position trop élevée.
 			if(this.transform.position.y>this.maxHeight)
 			{
