@@ -16,15 +16,27 @@ public abstract class Health : MonoBehaviour
 	private float m_CommotionThresold = 50f; //Commotion maximale avant la mort.
 	[HideInInspector]public bool m_Dead = false; //Indicateur d'état (vie/mort).
 
+	protected float m_LastImpactPower=0;
+	protected Vector3 m_LastImpactPosition;
+
 	void Update () 
 	{
 		if(m_Dead)//N'update pas si il est mort.
 		{
-			this.OnDeath();
+			if(this.networkView!=null && networkView.isMine)
+			{
+				this.networkView.RPC("RPC_Death",RPCMode.Others);
+				this.RPC_Death();
+			}
+			else
+			{
+				this.RPC_Death();
+			}
 		}
 		else
 		{
 			this.OnLive();
+			this.m_LastImpactPower=0;
 		}
 	}
 
@@ -131,5 +143,16 @@ public abstract class Health : MonoBehaviour
 		this.audio.PlayOneShot(this.m_HitSound);
 		this.Commotion+=p_Commotion;
 		this.OnHit(false,p_Commotion,NetworkView.Find(p_SourceID).gameObject);
+	}
+	[RPC]
+	public void SetImpact(float p_Power,Vector3 p_Position)
+	{
+		this.m_LastImpactPower = p_Power;
+		this.m_LastImpactPosition = p_Position;
+	}
+	[RPC]
+	public void RPC_Death()
+	{
+		this.OnDeath();
 	}
 }

@@ -8,6 +8,10 @@ public class Zombie : Life {
 	const float MAX_ATTACK_POWER = 10;
 	const float ZOMBIE_FOCUS_GAIN_PER_POWER = 10;
 	const float THREAT_GAIN_PER_MELEE_DAMAGE = 2;
+
+	const float MOANING_DISTANCE_FROM_TARGET = 3;
+	const float MOANING_INTERVAL = 2;
+	private float m_NextMoan=0;
 	
 	public GameObject m_Body;
 	Transform m_Target;
@@ -16,6 +20,7 @@ public class Zombie : Life {
 	float m_Speed = 1f;
 	float m_NextHitTick = 0;
 	public Animation[] m_Hands;
+	public AudioClip[] m_Sounds;//0-Death 1-AgressiveMoan 2-3HurtMoan 4+ GenericMoans
 	
 	// Update is called once per frame
 	void Start()
@@ -35,12 +40,26 @@ public class Zombie : Life {
 			this.playHandAnim("hand_ZomIdle");
 		}
 	//	m_Body.animation["Body_Walk"].speed= this.rigidbody.velocity.magnitude/3;
+		//Moans
+		if(Time.time>=this.m_NextMoan)
+		{
+			this.m_NextMoan=Time.time+MOANING_INTERVAL;
+			if(Random.value>0.8)
+			{
+				this.Playsound(4);
+			}
+		}
 		Quaternion LastRot = this.transform.rotation;
 		if(m_Target!=null)
 		{
 			this.transform.LookAt(m_Target);
 			this.transform.rotation = Quaternion.Lerp(LastRot,this.transform.rotation,3*Time.deltaTime);
 			this.rigidbody.velocity=transform.forward*m_Speed;
+			if(Vector3.Distance(m_Target.transform.position,this.transform.position)<=MOANING_DISTANCE_FROM_TARGET&&Time.time>=this.m_NextMoan)
+			{
+				this.m_NextMoan=Time.time+MOANING_INTERVAL;
+				this.Playsound(1);
+			}
 		}
 		else
 		{
@@ -70,11 +89,13 @@ public class Zombie : Life {
 	
 	public override void OnDeath()
 	{
-		if(Network.isServer && this.m_Dead)
+		this.Playsound(0);
+		if(Network.isServer)
 		{
 			EV.gameManager.signalZombieDeath();
-			Network.Destroy(this.gameObject);
 		}
+		this.GetComponent<Ragdoller>().Ragdoll(this.m_LastImpactPosition,this.m_LastImpactPower);
+		Destroy(this);
 	}
 	/// <summary>
 	/// Tries to select a new target within threat range.
@@ -150,6 +171,7 @@ public class Zombie : Life {
 					PlayerMotor colPlayer = colHealth as PlayerMotor;
 					if(colPlayer!=null)
 					{
+						this.Playsound(1);
 						colPlayer.gainFocusExp(Focus.Zombie,attackPower*ZOMBIE_FOCUS_GAIN_PER_POWER);
 					}
 				}
@@ -159,6 +181,10 @@ public class Zombie : Life {
 	
 	public override void OnHit (bool p_isBleed, float p_amount, GameObject p_Source)
 	{
+		if(Random.value>0.5)
+		{
+			this.Playsound(2);
+		}
 		Weapon sourceWeapon = p_Source.GetComponent<Weapon>() as Weapon;
 		if(sourceWeapon!=null)
 		{
@@ -182,11 +208,34 @@ public class Zombie : Life {
 	void RPC_NewTarget (NetworkViewID viewID)
 	{
 		this.m_Target=NetworkView.Find(viewID).transform;
+		if(this.m_Target.Equals(EV.networkManager.m_PlayerInfos[Network.player].m_PlayerMotor.gameObject.transform))
+		{
+			audio.volume=1;
+		}
+		else
+		{
+			audio.volume=0.3f;
+		}
 	}
+
 	[RPC]
 	void RPC_NewAltTarget (Vector3 target)
 	{
 		this.m_Target=null;
 		this.m_AltTarget=target;
+	}
+	
+	private void Playsound(int p_Soundindex)
+	{
+		this.networkView.RPC("RPC_PlaySound",RPCMode.All,p_Soundindex);
+	}
+
+	[RPC]
+	void RPC_PlaySound(int p_SoundIndex)
+	{
+		audio.Stop();
+		audio.pitch=(0.8f+Random.value*0.4f);
+		audio.clip=this.m_Sounds[p_SoundIndex];
+		audio.Play();
 	}
 }

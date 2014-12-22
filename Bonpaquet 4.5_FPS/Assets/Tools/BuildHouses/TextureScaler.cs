@@ -10,15 +10,16 @@ public class TextureScaler : MonoBehaviour {
 	{
 		Transform oldParent = this.transform.parent;
 		this.transform.parent=null;
-		if(m_SwapXY)
+		foreach(Material m in this.renderer.materials)
 		{
-			this.renderer.material.mainTextureScale = new Vector2(this.transform.localScale.x*m_Scalex,this.transform.localScale.z*m_Scaley);
-			this.renderer.material.SetTextureScale("_BumpMap",new Vector2(this.transform.localScale.x*m_Scalex,this.transform.localScale.z*m_Scaley));
-		}
-		else
-		{
-			this.renderer.material.mainTextureScale = new Vector2(this.transform.localScale.x*m_Scalex,this.transform.localScale.y*m_Scaley);
-			this.renderer.material.SetTextureScale("_BumpMap",new Vector2(this.transform.localScale.x*m_Scalex,this.transform.localScale.y*m_Scaley));
+			if(m_SwapXY)
+			{
+				m.mainTextureScale = new Vector2(this.transform.localScale.x*m_Scalex,this.transform.localScale.z*m_Scaley);
+			}
+			else
+			{
+				m.mainTextureScale = new Vector2(this.transform.localScale.x*m_Scalex,this.transform.localScale.y*m_Scaley);
+			}
 		}
 		this.transform.parent=oldParent;
 		Destroy(this);

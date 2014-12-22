@@ -10,6 +10,7 @@ public abstract class FireArm : Weapon
 	public int m_BulletPerShot = 1;//Nombre de balles propulsés par coup (Par munition, comme dans le cas d'un fusil à pompe).
 	public float m_GeneratedThreatOnFire = 0f;
 	public float m_Range = 100;
+	public float m_StoppingPower = 50;
 	
 	public void Fire(byte p_Bullet)
 	{
@@ -22,6 +23,10 @@ public abstract class FireArm : Weapon
 			if(Physics.Raycast(this.m_Master.m_Cursor.position,this.m_Master.m_Cursor.TransformDirection(Vector3.forward),out hitInfo,m_Range))
 			{
 				Health colHealth = hitInfo.collider.GetComponent<Health>();
+				if(hitInfo.rigidbody!=null)
+				{
+					hitInfo.rigidbody.AddForceAtPosition((hitInfo.transform.position - hitInfo.point).normalized*m_StoppingPower*this.m_Power,hitInfo.point);
+				}
 				if(colHealth!=null)
 				{
 					float multiplier = this.m_Master.getBonusMultiplier(Bonus.BonusType.FireArmDamage);
@@ -36,10 +41,12 @@ public abstract class FireArm : Weapon
 					case EV.AmmoType.Shotgun:
 						multiplier+=this.m_Master.getBonusMultiplier(Bonus.BonusType.ShotgunDamage)-1;break;
 					}
-					float bleedDamage = this.m_Power*this.m_BleedRatio*p_Bullet/75*multiplier;
+
 					float commoDamage = (1-this.m_BleedRatio)*this.m_Power*p_Bullet/75*multiplier;
+					float bleedDamage = this.m_Power*this.m_BleedRatio*p_Bullet/75*multiplier;
 					colHealth.networkView.RPC("AddBleed",RPCMode.AllBuffered,bleedDamage,this.networkView.viewID);
 					colHealth.networkView.RPC("AddCommotion",RPCMode.AllBuffered,commoDamage,this.networkView.viewID);
+					colHealth.networkView.RPC ("SetImpact",RPCMode.All,100*commoDamage,hitInfo.point);
 					this.CreateImpact(colHealth,hitInfo.point);
 					this.onHit(colHealth.gameObject,bleedDamage+commoDamage);
 				}

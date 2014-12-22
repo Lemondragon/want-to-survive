@@ -29,6 +29,12 @@ public class HealthMonitorView : MonoBehaviour,IObserver
 	private  float m_BleedThresold= 30;
 	private  float m_CommotionThresold= 50;
 
+	public void Start()
+	{
+		this.m_BleedSpiral.materialForRendering.SetFloat("_CutOff", 1);
+		this.m_CommotionDot.materialForRendering.SetFloat("_CutOff", 1);
+	}
+
 	public void update(ObserverMessages p_Message, object p_Argument)
 	{
 		switch (p_Message)

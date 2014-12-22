@@ -5,6 +5,8 @@ using System.Collections;
 public class PlayerPuppet : Puppet
 {
 	[SerializeField]
+	private MeshRenderer m_Head;
+	[SerializeField]
 	private float m_TransitionSpeed = 5;
 	[SerializeField]
 	private float m_MaxWait = 2;
@@ -29,6 +31,10 @@ public class PlayerPuppet : Puppet
 		{
 			this.rigidbody.isKinematic=true;
 		}
+		else
+		{
+			this.m_Head.enabled=false;
+		}
 	}
 	protected override void AsPuppet()
 	{
@@ -48,7 +54,6 @@ public class PlayerPuppet : Puppet
 			if(Time.time>=this.m_LastPosUpdate+(this.m_MaxWait/(Vector3.Distance(this.m_LastPos,this.transform.position)/this.m_DistanceThresold)))
 			{
 				this.updates++;
-				Debug.Log(this.updates+":POS");
 				networkView.RPC("RPC_SetPos",RPCMode.All,this.transform.position);
 				this.m_LastPosUpdate=Time.time;
 			}
@@ -59,7 +64,6 @@ public class PlayerPuppet : Puppet
 			if(Time.time>=this.m_LastRotUpdate+(this.m_MaxWait/(Quaternion.Angle(this.m_LastRot,this.transform.rotation)/this.m_RotationThresold)))
 			{
 				this.updates++;
-				Debug.Log(this.updates+":ROT");
 				networkView.RPC("RPC_SetRot",RPCMode.All,this.transform.rotation);
 				this.m_LastRotUpdate=Time.time;
 			}

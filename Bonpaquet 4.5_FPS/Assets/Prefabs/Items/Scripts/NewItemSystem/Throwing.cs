@@ -2,12 +2,14 @@ using UnityEngine;
 using System.Collections;
 
 public class Throwing : Weapon {
+	[SerializeField]
+	private int m_ThrownID;
 
 	public override void Trigger ()
 	{
 		if(this.Quantity > 0)
 		{
-			GameObject clone = (GameObject)Network.Instantiate(this.m_ImpactPrefab,this.m_Tip.position,this.transform.rotation,0);
+			GameObject clone = (GameObject)Network.Instantiate(EV.gameManager.m_ThrowingPrefabs[m_ThrownID],this.m_Tip.position,this.transform.rotation,0);
 			clone.transform.rotation=this.transform.rotation*Quaternion.Euler(new Vector3(0,0,(float)(Random.value-0.5)*(this.m_Master.Fear)));
 			clone.tag="";
 			Projectile ss = (Projectile)clone.GetComponent(typeof(Projectile));
@@ -21,7 +23,10 @@ public class Throwing : Weapon {
 			if(this.Quantity<1)
 			{
 				this.Drop();
-				Destroy(this.gameObject);
+				Destroy(this.renderer);
+				Destroy(this.collider);
+				Destroy(this.rigidbody);
+				Destroy(this.gameObject,10f);
 			}
 		}
 		else //THIS SHOULD NOT HAPPEN 

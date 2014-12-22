@@ -259,6 +259,7 @@ public class PlayerMotor : Life
 	{
 		if(this.networkView.isMine)
 		{
+			this.LockCursor();
 			//Gérer la régénération
 			if(this.getBonusMultiplier(Bonus.BonusType.BleedRegen)!=0)
 			{
@@ -270,8 +271,9 @@ public class PlayerMotor : Life
 			}
 			//Limitation de souris
 			this.m_MouseClick=Input.GetMouseButtonDown(0);
+
 			//Gestion des animations
-			//m_Body.animation["Body_Walk"].speed= this.rigidbody.velocity.magnitude/3;
+			//this.m_Body.animation["Walk"].speed= this.rigidbody.velocity.magnitude/3;
 
 			//Correction d'une position trop élevée.
 			if(this.transform.position.y>this.maxHeight)
@@ -344,7 +346,7 @@ public class PlayerMotor : Life
 				this.m_ShowInventory=!this.m_ShowInventory;
 				this.m_PlayerMenuView.SetActive(this.m_ShowInventory);
 				this.m_InGameOnlyUI.SetActive(!this.m_ShowInventory);
-				Screen.showCursor=this.m_ShowInventory;
+
 				this.GetComponent<MouseLook>().enabled=!this.m_ShowInventory;
 				this.getObservable().notify(ObserverMessages.InventoryStateChanged,this.m_ShowInventory);
 			}
@@ -418,10 +420,10 @@ public class PlayerMotor : Life
 	{
 		if (p_Equippable.m_HeldByHand != -1) 
 		{
-			this.networkView.RPC ("PlayHandAction", RPCMode.All, p_Equippable.m_HeldByHand, "hand_UnGrab");
+			this.networkView.RPC ("PlayHandAction", RPCMode.All, p_Equippable.m_HeldByHand, "UnGrab");
 			if (p_Equippable.m_IsTwoHanded) 
 			{
-					this.networkView.RPC ("PlayHandAction", RPCMode.All, 1, "hand_UnGrab");
+					this.networkView.RPC ("PlayHandAction", RPCMode.All, 1, "UnGrab");
 			}
 			EV.gameManager.GUIMessage ("Unequipped :" + p_Equippable.FullName + ".", Color.white);
 			this.m_HeldInHands [p_Equippable.m_HeldByHand] = null;
@@ -777,6 +779,20 @@ public class PlayerMotor : Life
 			break;
 		}
 	}
+
+	private void LockCursor()
+	{
+		if(!this.m_ShowInventory)
+		{
+			Screen.lockCursor=true;
+			Screen.showCursor=false;
+		}
+		else
+		{
+			Screen.showCursor=true;
+			Screen.lockCursor=false;
+		}
+	}
 	
 	/// <summary>
 	/// Raccourci vers Skilltree.gainFocusExp().
@@ -804,10 +820,10 @@ public class PlayerMotor : Life
 	[RPC]
 	void PlayHandActionScaled (int p_hand,string p_Action,float p_Scale)
 	{
-		/*Animation anim = this.m_HandPositions[p_hand].transform.parent.parent.animation;
+		Animation anim = this.m_HandPositions[p_hand].transform.parent.parent.animation;
 		anim[p_Action].speed=p_Scale;
 		anim.Stop();
-		anim.Play(p_Action);*/
+		anim.Play(p_Action);
 	}
 	[RPC]
 	void RPC_GenerateThreat (float p_Threat)

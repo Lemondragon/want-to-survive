@@ -148,9 +148,9 @@ class HouseEditor : Editor
 					{
 						Vector3 pos=this.getSelectionCenter();
 						pos.y=2;
-						GameObject newRoof = GameObject.Instantiate(this.m_Roof,pos,Quaternion.Euler(-90,0,0))as GameObject;
+						GameObject newRoof = GameObject.Instantiate(this.m_Roof,pos,Quaternion.Euler(0,0,0))as GameObject;
 						newRoof.transform.parent=this.m_Obj.transform;
-						newRoof.transform.localScale=new Vector3(Mathf.Abs(this.m_HeldCursorPos.x-this.m_CursorPos.x)/2,Mathf.Abs(this.m_HeldCursorPos.y-this.m_CursorPos.y),3);
+						newRoof.transform.localScale=new Vector3(Mathf.Abs(this.m_HeldCursorPos.x-this.m_CursorPos.x),3,Mathf.Abs(this.m_HeldCursorPos.y-this.m_CursorPos.y));
 						this.m_BuildHistory.Push(newRoof);
 					}
 					else

@@ -98,6 +98,7 @@
      <Compile Include="Assets\Scripts\Observable.cs" />
      <Compile Include="Assets\Scripts\ObserverMessages.cs" />
      <Compile Include="Assets\Scripts\QuickslotManager.cs" />
+     <Compile Include="Assets\Scripts\Ragdoller.cs" />
      <Compile Include="Assets\Tools\BuildHouses\TextureScaler.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\ActionButton.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\ActionsView.cs" />
@@ -111,9 +112,13 @@
      <Compile Include="Assets\UIPrefabs\Scripts\PlayerLabel.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\PlayerUI.cs" />
      <Compile Include="Assets\UIPrefabs\Scripts\QuickSlotButton.cs" />
+     <None Include="Assets\Standard Assets\Toon Shading\Sources\Shaders\Toony-Basic.shader" />
      <None Include="Assets\Standard Assets\Projectors\Guidelines.txt" />
      <None Include="Assets\Standard Assets\Skyboxes\_skybox info.txt" />
      <None Include="Assets\Standard Assets\Projectors\Sources\Shaders\Projector Multiply.shader" />
+     <None Include="Assets\Standard Assets\Toon Shading\Sources\Shaders\Toony-BasicOutline.shader" />
+     <None Include="Assets\Standard Assets\Toon Shading\Sources\Shaders\Toony-LightedOutline.shader" />
+     <None Include="Assets\Standard Assets\Toon Shading\Sources\Shaders\Toony-Lighted.shader" />
      <None Include="Assets\Textures\Materials\ToneShader.shader" />
      <None Include="Assets\Textures\Materials\SpriteCutout.shader" />
  <Reference Include="Assembly-UnityScript-firstpass">

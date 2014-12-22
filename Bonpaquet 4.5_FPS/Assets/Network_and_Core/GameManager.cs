@@ -22,6 +22,7 @@ public class GameManager : MonoBehaviour
 	private Light m_Sun;
 	private float m_StartTime = 0f;
 	public Texture m_TextureDebug;
+	public GameObject[] m_ThrowingPrefabs;
 	
 	//ItemLists
 	public GameObject[] m_ILMedical;

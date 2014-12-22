@@ -49,9 +49,13 @@
      <Compile Include="Assets\Editor\CeillingSwapper.cs" />
      <Compile Include="Assets\Editor\HouseBuilderWindow.cs" />
      <Compile Include="Assets\Editor\HouseEditor.cs" />
+     <None Include="Assets\Standard Assets\Toon Shading\Sources\Shaders\Toony-Basic.shader" />
      <None Include="Assets\Standard Assets\Projectors\Guidelines.txt" />
      <None Include="Assets\Standard Assets\Skyboxes\_skybox info.txt" />
      <None Include="Assets\Standard Assets\Projectors\Sources\Shaders\Projector Multiply.shader" />
+     <None Include="Assets\Standard Assets\Toon Shading\Sources\Shaders\Toony-BasicOutline.shader" />
+     <None Include="Assets\Standard Assets\Toon Shading\Sources\Shaders\Toony-LightedOutline.shader" />
+     <None Include="Assets\Standard Assets\Toon Shading\Sources\Shaders\Toony-Lighted.shader" />
      <None Include="Assets\Textures\Materials\ToneShader.shader" />
      <None Include="Assets\Textures\Materials\SpriteCutout.shader" />
  <Reference Include="Assembly-UnityScript-firstpass">

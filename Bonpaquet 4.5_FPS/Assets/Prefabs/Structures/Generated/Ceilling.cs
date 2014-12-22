@@ -38,10 +38,10 @@ public class Ceilling : MonoBehaviour
 	public void RPC_SetColor(Vector3 p_Color)
 	{
 		Color col = new Color (p_Color.x,p_Color.y,p_Color.z,1);
-		this.renderer.material.SetColor("_Color",col);
+		this.renderer.materials[1].SetColor("_Color",col);
 		foreach(Renderer r in this.m_ChildRenderers)
 		{
-			r.material.SetColor("_Color",col);
+			r.materials[1].SetColor("_Color",col);
 		}
 	}
 }
