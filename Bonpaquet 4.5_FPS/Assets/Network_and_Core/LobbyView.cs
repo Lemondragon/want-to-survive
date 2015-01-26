@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
@@ -55,7 +55,7 @@ public class LobbyView : MonoBehaviour
 
 	public void refreshHostList()
 	{
-		EV.networkManager.RefreshHostList();
+		EV.networkManager.StartRefreshHostList();
 	}
 
 	public void showHostList(HostData[] m_hostData)

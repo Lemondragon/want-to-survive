@@ -36,17 +36,20 @@ public class NetworkManager : MonoBehaviour
 	/// </summary>
 	public class PlayerInfos
 	{
+		public NetworkPlayer m_AssociatedPlayer;//NetworkPlayer associé aux informations, correspond à sa Key dans m_PlayerInfos de NetworkManager
+		public string m_Name; //Nom du joueur.
+		public Color m_Color = Color.gray; //Couleur du joueur.
+		public PlayerMotor m_PlayerMotor; //PlayerMotor du joueur (null lorsque dans le lobby).
+
 		public PlayerInfos (NetworkPlayer p_Player,string p_Name)
 		{
 			this.m_AssociatedPlayer=p_Player;
 			this.m_Name=p_Name;
 		}
-		public NetworkPlayer m_AssociatedPlayer;//NetworkPlayer associé aux informations, correspond à sa Key dans m_PlayerInfos de NetworkManager
-		public string m_Name; //Nom du joueur.
-		public Color m_Color = Color.gray; //Couleur du joueur.
-		public PlayerMotor m_PlayerMotor; //PlayerMotor du joueur (null lorsque dans le lobby).
 	}
-	// Use this for initialization
+
+	//MONOBEHAVIOUR
+	
 	void Start () 
 	{
 		//SINGLETON (kind of) avec Persistance entre les chargements.
@@ -67,21 +70,7 @@ public class NetworkManager : MonoBehaviour
 	{
 		if(m_RefreshingHosts)//Tente de recevoir des serveurs valides du MasterServer.
 		{
-			if(MasterServer.PollHostList().Length!=0)//Si on en trouve un.
-			{
-				this.m_ConsoleMessage="Found "+MasterServer.PollHostList().Length+" Servers.";
-				this.m_HostData=MasterServer.PollHostList();
-				m_RefreshingHosts=false;
-				this.m_BusyTimer=0;
-				this.m_LobbyView.showHostList(this.m_HostData);
-			}
-			else if (this.m_BusyTimer<=Time.time)//Si on n'en trouve pas après 10 secondes.
-			{
-				this.m_ConsoleMessage="No Hosts found after 10 seconds.";
-				m_RefreshingHosts=false;
-				this.m_BusyTimer=0;
-				this.m_LobbyView.showHostList(new HostData[0]);
-			}
+			this.RefreshHosts();
 		}
 		if(Input.GetButtonDown("MainMenu"))//Si on appuie sur le bouton pour afficher le menu, on le toggle on/off.
 		{
@@ -89,97 +78,18 @@ public class NetworkManager : MonoBehaviour
 		}
 	}
 
-	public void disconnect()
-	{
-		if (Network.isServer)
-		{
-			MasterServer.UnregisterHost();
-		}
-		Network.Disconnect();
-	}
 
-	public void startGame()
-	{
-		EV.gameManager.InitializeNetworkLevelLoad(this.m_SelectedLevel);
-	}
 
-	public void kickPlayer(NetworkPlayer p_Player)
-	{
-		if(p_Player.Equals(Network.player))
-		{
-			this.disconnect();
-		}
-		else
-		{
-			Network.CloseConnection(p_Player,true);
-		}
-	}
-	public void connect(HostData p_Host)
-	{
-		Network.Connect(p_Host);
-	}
 
-	/// <summary>
-	/// Refreshs the host list.
-	/// </summary>
-	public void RefreshHostList()
-	{
-		this.m_ConsoleMessage="Requesting Hosts List...";
-		MasterServer.RequestHostList(this.GAMENAME);
-		m_RefreshingHosts=true;
-		this.m_BusyTimer=Time.time+10;
-	}
+
+	//EVENTS
 
 	void OnServerInitialized()//Lorsque le serveur est initialisé.
 	{
 		//On crée le gameManager qui sera utilisé pour la partie.
-		EV.gameManager = ((GameObject)Network.Instantiate(m_GameManagerPrefab,this.transform.position,Quaternion.identity,0)).GetComponent<GameManager>();
+		this.CreateGameManager ();
 		//On indique la connection du serveur en tant que joueur.
-		this.networkView.RPC("RPC_NewPlayerHasConnected",RPCMode.AllBuffered,Network.player);
-		this.networkView.RPC("RPC_SetPlayerName",RPCMode.AllBuffered,Network.player,this.m_MyName);
-	}
-	
-	/// <summary>
-	/// Initializes the player.
-	/// </summary>
-	/// <param name='p_Player'>
-	/// NetworkPlayer to Initialize its player.
-	/// </param>
-	public void InitializePlayer(NetworkPlayer p_Player)
-	{
-		if (!this.m_MyPlayer) //InitializePlayer ne fonctionnera pas si un joueur est DÉJA initialisé.
-		{
-			//On sélectionne un des objets aléatoirement ayant comme tag "Spawn" pour faire apparaitre le joueur dessus.
-			GameObject[] spawns = GameObject.FindGameObjectsWithTag("Spawn");
-			Transform spawn = spawns[(int)Mathf.Floor(spawns.Length*Random.value)].transform;
-			GameObject playerObject = (GameObject)Network.Instantiate(this.m_PlayerPrefab,spawn.position,spawn.rotation,0);
-			if(Network.isServer) //Le serveur fait apparaitre les objets de départ à des fins de test.
-			{
-				int spnOffset = 0;
-				foreach(GameObject g in this.m_TestSpawn)
-				{
-					Network.Instantiate(g,new Vector3(0,1+spnOffset,0),Quaternion.identity,1);
-					spnOffset+=3;
-				}
-			}
-			//On assigne les références possibles grâce à la création de ce nouveau joueur.
-			this.m_MyPlayer=playerObject;
-			PlayerMotor pm = this.m_MyPlayer.GetComponent<PlayerMotor>();
-			pm.Init();
-			//On lui donne son focus de base.
-			for(int i = 0;i<this.m_StartFocusBonus.Length;i++)
-			{
-				if(this.m_StartFocusBonus[i])
-				{
-					pm.gainFocusExp((Focus)i,100);
-				}
-			}
-			pm.m_SkillTree.m_UseExtendedSkills=this.m_UseExtendedSkillTree;
-			//Signifie l'apparition de ce nouveau joueur.
-			EV.gameManager.networkView.RPC("RPC_NewPlayer",RPCMode.All,playerObject.networkView.viewID,p_Player);
-			//Synchonise les attributs visuels sur chaque machine.
-			this.networkView.RPC("SetPlayerAttributes",RPCMode.AllBuffered,p_Player,playerObject.networkView.viewID,new Vector3(this.m_MyColor.x,this.m_MyColor.y,this.m_MyColor.z));
-		}
+		this.ConnectAsServer ();
 	}
 	
 	void OnPlayerDisconnected(NetworkPlayer player) 
@@ -198,17 +108,7 @@ public class NetworkManager : MonoBehaviour
 		}
 		else 
 		{
-			Debug.Log("New Player has connected");
-			//Send him the server's name (this will trigger a response from the new player : he will send his local name back)
-			this.networkView.RPC("RPC_SyncServerInfo",p_Player,this.m_ServerName);
-			//Send Every Player's Names and colors Known.The Buffer should aready have made him know the players.
-			foreach (PlayerInfos pi in this.m_PlayerInfos.Values)
-			{
-				this.networkView.RPC("RPC_SetPlayerName",p_Player,pi.m_AssociatedPlayer,pi.m_Name);
-				this.networkView.RPC("RPC_SetLobbyColor",p_Player,pi.m_AssociatedPlayer,new Vector3(pi.m_Color.r,pi.m_Color.g,pi.m_Color.b));
-			}
-			//Notifies everyone of his existence.(This statement SHOULD arrive at other connections BEFORE the new player tells his name). The opposite will make the player nammed "Player".
-			this.networkView.RPC("RPC_NewPlayerHasConnected",RPCMode.AllBuffered,p_Player);
+			this.GreetNewPlayer(p_Player);
 		}
 	}
 	
@@ -217,12 +117,195 @@ public class NetworkManager : MonoBehaviour
 		this.m_ConsoleMessage="Disconnected from Server.";
 		this.EndGame();
 	}
+
+
+
+
+
+	//PUBLIC 
 	
 	public void StartServer ()
 	{
 		Network.InitializeServer(3,25001,!Network.HavePublicAddress());
 		MasterServer.RegisterHost(this.GAMENAME,this.m_ServerName,"Private");
 	}
+
+	/// <summary>
+	/// Initializes the player.
+	/// </summary>
+	/// <param name='p_Player'>
+	/// NetworkPlayer to Initialize its player.
+	/// </param>
+	public void InitializePlayer(NetworkPlayer p_Player)
+	{
+		if (!this.m_MyPlayer) //InitializePlayer ne fonctionnera pas si un joueur est DÉJA initialisé.
+		{
+			//On sélectionne un des objets aléatoirement ayant comme tag "Spawn" pour faire apparaitre le joueur dessus.
+			this.m_MyPlayer = this.SpawnPlayerAtSpawn();
+			if(Network.isServer) //Le serveur fait apparaitre les objets de départ à des fins de test.
+			{
+				this.SpawnTestObjects();
+			}
+			//On assigne les références possibles grâce à la création de ce nouveau joueur.
+			PlayerMotor pm = this.m_MyPlayer.GetComponent<PlayerMotor>();
+			pm.Init();
+			//On lui donne son focus de base.
+			this.GiveStartUpFocus(pm);
+			pm.m_SkillTree.m_UseExtendedSkills=this.m_UseExtendedSkillTree;
+			this.BroadcastPlayerInitialisation();
+		}
+	}
+
+	/// <summary>
+	/// Manual disconnect from game.
+	/// </summary>
+	public void disconnect()
+	{
+		if (Network.isServer)
+		{
+			MasterServer.UnregisterHost();
+		}
+		Network.Disconnect();
+	}
+	
+	/// <summary>
+	/// Manually Start the Game.
+	/// </summary>
+	public void startGame()
+	{
+		EV.gameManager.InitializeNetworkLevelLoad(this.m_SelectedLevel);
+	}
+	/// <summary>
+	/// Eject a player from the game.
+	/// </summary>
+	/// <param name="p_Player">P_ player.</param>
+	public void kickPlayer(NetworkPlayer p_Player)
+	{
+		if(p_Player.Equals(Network.player))
+		{
+			this.disconnect();
+		}
+		else
+		{
+			Network.CloseConnection(p_Player,true);
+		}
+	}
+	/// <summary>
+	/// Connect to the specified p_Host.
+	/// </summary>
+	/// <param name="p_Host">P_ host.</param>
+	public void connect(HostData p_Host)
+	{
+		Network.Connect(p_Host);
+	}
+
+	/// <summary>
+	/// Refreshs the host list.
+	/// </summary>
+	public void StartRefreshHostList()
+	{
+		this.m_ConsoleMessage="Requesting Hosts List...";
+		MasterServer.RequestHostList(this.GAMENAME);
+		m_RefreshingHosts=true;
+		this.m_BusyTimer=Time.time+10;
+	}
+
+	//PRIVATE
+
+	private void RefreshHosts()
+	{
+		if(MasterServer.PollHostList().Length!=0)//Si on en trouve un.
+		{
+			this.m_ConsoleMessage="Found "+MasterServer.PollHostList().Length+" Servers.";
+			this.m_HostData=MasterServer.PollHostList();
+			m_RefreshingHosts=false;
+			this.m_BusyTimer=0;
+			this.m_LobbyView.showHostList(this.m_HostData);
+		}
+		else if (this.m_BusyTimer<=Time.time)//Si on n'en trouve pas après 10 secondes.
+		{
+			this.m_ConsoleMessage="No Hosts found after 10 seconds.";
+			m_RefreshingHosts=false;
+			this.m_BusyTimer=0;
+			this.m_LobbyView.showHostList(new HostData[0]);
+		}
+	}
+
+	private void ConnectAsServer()
+	{
+		this.networkView.RPC("RPC_NewPlayerHasConnected",RPCMode.AllBuffered,Network.player);
+		this.networkView.RPC("RPC_SetPlayerName",RPCMode.AllBuffered,Network.player,this.m_MyName);
+	}
+
+	private void CreateGameManager()
+	{
+		EV.gameManager = ((GameObject)Network.Instantiate(m_GameManagerPrefab,this.transform.position,Quaternion.identity,0)).GetComponent<GameManager>();
+	}
+
+	/// <summary>
+	/// Spawns a player at a valid spawn.
+	/// </summary>
+	/// <returns>The player at spawn.</returns>
+	private GameObject SpawnPlayerAtSpawn()
+	{
+		GameObject[] spawns = GameObject.FindGameObjectsWithTag("Spawn");
+		Transform spawn = spawns[(int)Mathf.Floor(spawns.Length*Random.value)].transform;
+		return (GameObject)Network.Instantiate(this.m_PlayerPrefab,spawn.position,spawn.rotation,0);
+	}
+	/// <summary>
+	/// Spawns Objects in this.m_TestSpawn.
+	/// </summary>
+	private void SpawnTestObjects()
+	{
+		int spnOffset = 0;
+		foreach(GameObject g in this.m_TestSpawn)
+		{
+			Network.Instantiate(g,new Vector3(0,1+spnOffset,0),Quaternion.identity,1);
+			spnOffset+=3;
+		}
+	}
+	/// <summary>
+	/// Add focus according to selections to p_Motor.
+	/// </summary>
+	/// <param name="p_Motor">P_ motor.</param>
+	private void GiveStartUpFocus(PlayerMotor p_Motor)
+	{
+		for(int i = 0;i<this.m_StartFocusBonus.Length;i++)
+		{
+			if(this.m_StartFocusBonus[i])
+			{
+				p_Motor.gainFocusExp((Focus)i,100);
+			}
+		}
+	}
+	/// <summary>
+	/// Send informations about your newly created Player Instance to other Machines.
+	/// </summary>
+	private void BroadcastPlayerInitialisation()
+	{
+		//Signifie l'apparition de ce nouveau joueur.
+		EV.gameManager.networkView.RPC("RPC_NewPlayer",RPCMode.All,this.m_MyPlayer.networkView.viewID,Network.player);
+		//Synchonise les attributs visuels sur chaque machine.
+		this.networkView.RPC("SetPlayerAttributes",RPCMode.AllBuffered,Network.player,this.m_MyPlayer.networkView.viewID,new Vector3(this.m_MyColor.x,this.m_MyColor.y,this.m_MyColor.z));
+	}
+
+	private void GreetNewPlayer(NetworkPlayer p_Player)
+	{
+		//Send him the server's name (this will trigger a response from the new player : he will send his local name back)
+		this.networkView.RPC("RPC_SyncServerInfo",p_Player,this.m_ServerName);
+		//Send Every Player's Names and colors Known.The Buffer should aready have made him know the players.
+		foreach (PlayerInfos pi in this.m_PlayerInfos.Values)
+		{
+			this.networkView.RPC("RPC_SetPlayerName",p_Player,pi.m_AssociatedPlayer,pi.m_Name);
+			this.networkView.RPC("RPC_SetLobbyColor",p_Player,pi.m_AssociatedPlayer,new Vector3(pi.m_Color.r,pi.m_Color.g,pi.m_Color.b));
+		}
+		//Notifies everyone of his existence.(This statement SHOULD arrive at other connections BEFORE the new player tells his name). The opposite will make the player nammed "Player".
+		this.networkView.RPC("RPC_NewPlayerHasConnected",RPCMode.AllBuffered,p_Player);
+	}
+
+
+
+	//RPCS
 	
 	[RPC]
 	/// <summary>
@@ -277,6 +360,7 @@ public class NetworkManager : MonoBehaviour
 		this.m_HostData = new HostData[0];
 		Application.LoadLevel("Lobby");
 	}
+
 	[RPC]
 	public void RPC_SyncServerInfo(string p_ServerName)
 	{

@@ -47,17 +47,23 @@ public class GameManager : MonoBehaviour
 			this.m_ZoneType=p_ZoneType;
 			this.m_InnerZones = new GameObject[20,20];
 		}
+		/// <summary>
+		/// Remove the relation between the actual gameobject and the inner zone	
+		/// </summary>
 		public void DeleteInnerZone(Vector2 localPos)
 		{
 			this.m_InnerZones[(int)localPos.x,(int)localPos.y]=null;
 		}
+		/// <summary>
+		/// Set the object of the an inner zone to p_GameObject	
+		/// </summary>
 		public void AffectInnerZone(GameObject p_GameObject,Vector2 localPos)
 		{
 			this.m_InnerZones[(int)localPos.x,(int)localPos.y]=p_GameObject;
 		}
 	}
 	
-	class Message
+	private class Message
 	{
 		public string m_Message;
 		public Color m_Color;
@@ -79,36 +85,9 @@ public class GameManager : MonoBehaviour
 		if(Network.isServer)
 		{
 			this.m_Threat+=p_Threat;
-			if(this.m_Threat>=ZOMBIE_SPAWN_COST&&this.m_ZombieCount<this.m_MaxZombies)
+			if(this.ZombieCanSpawn())
 			{
-				this.m_Threat-=ZOMBIE_SPAWN_COST;
-				Vector3 pos; 
-				bool valid;
-				int tries = 0;
-				do
-				{//Tries to find a valid location away from players (10 tries).
-					pos = new Vector3 (Random.value*100,0.66f,Random.value*100);
-					valid = true;
-					foreach(NetworkManager.PlayerInfos pi in EV.networkManager.m_PlayerInfos.Values)
-					{
-						//valid&=(pi.m_PlayerMotor.transform.position-pos).magnitude>ZOMBIE_SPAWN_PERIMETER;
-						Transform playTrans = pi.m_PlayerMotor.transform;
-						float angle =Mathf.Abs(Vector3.Angle(playTrans.TransformDirection(Vector3.forward),playTrans.position-pos));
-						valid&=angle>PLAYER_VIEW_ANGLE;
-						valid&=ZOMBIE_SPAWN_MIN_DISTANCE<=Vector3.Distance(playTrans.position,pos);
-					}
-					tries++;
-				}while(!valid&&tries<ZOMBIE_POS_TRIES);
-				
-				if(tries<=ZOMBIE_POS_TRIES)
-				{
-					Network.Instantiate(m_StandardZombiePrefab,pos,Quaternion.identity,0);
-					this.m_ZombieCount++;
-				}
-				else
-				{
-					Debug.LogWarning("Zombie Spawn Failed after "+ZOMBIE_POS_TRIES+" retries.");
-				}
+				this.SpawnZombie();
 			}
 		}
 	}
@@ -131,63 +110,14 @@ public class GameManager : MonoBehaviour
 			GUI.Label(new Rect(120*EV.guiPixel,10*EV.guiPixel+(20*offset),400,20),m.m_Message);
 			offset++;
 		}
-		/*Debug MatrixView
-		if(this.WorldIsGenerated)
-		{
-			for (int x = 0;x<100;x++)
-			{
-				for (int y = 0;y<100;y++)
-				{
-					if(this.getInnerZone(x,y)!=null)
-					{
-						GUI.DrawTexture(new Rect(x*5,Screen.height-(y*5),5,5),debugTexture);
-					}
-				}
-			}
-		}*/
 	}
 	void Update()
 	{
-		//Delete Messages at expiration
-		if(!this.m_KeepAllMessages)
-		{
-			if(Time.time>this.m_MessageExpiration&&this.m_MessageList.Count>0)
-			{
-				this.m_MessageList.RemoveAt(0);
-				this.m_MessageExpiration=Time.time+(3/(this.m_MessageList.Count+1));
-			}
-		}
+		this.FlushValidConsoleMessages ();
+		this.DayLightCycle ();
+	}
 
-		if(this.m_Sun!=null)
-		{
-			//DayLight 
-			float dayTime = ((Time.time-this.m_StartTime)%this.m_DayLightCycleTime)/this.m_DayLightCycleTime;
-			this.m_Sun.transform.rotation=Quaternion.Euler(360*dayTime,0f,0f);
-			for(int i = 0;i<this.m_DayTimes.Length;i++)
-			{
-				if(dayTime<this.m_DayTimes[i])
-				{
-					Color To;
-					if(i==this.m_DayTimes.Length-1){To=this.m_DayColors[0];}else{To=this.m_DayColors[i+1];}
-					Color result = Color.Lerp(this.m_DayColors[i],To,dayTime/this.m_DayTimes[i]);
-					this.m_Sun.color = result;
-					this.m_Sun.intensity=result.grayscale/3;
-					RenderSettings.ambientLight=Color.Lerp(result,Color.black,0.5f);
-					RenderSettings.fogColor=Color.Lerp(result,Color.black,0.8f);
-					RenderSettings.skybox.SetColor("_Tint",Color.Lerp(result,Color.black,0.2f));
-					i=this.m_DayTimes.Length;
-				}
-				else
-				{
-					dayTime-=this.m_DayTimes[i];
-				}
-			}
-		}
-	}
-	public void InitializeNetworkLevelLoad(string level)
-	{
-		networkView.RPC( "LoadLevel", RPCMode.AllBuffered, level, m_LastLevelPrefix + 1);
-	}
+	//EVENTS
 	
 	void OnLevelWasLoaded(int level)
 	{
@@ -239,6 +169,19 @@ public class GameManager : MonoBehaviour
 		}
 		this.m_Sun=GameObject.Find("Sun").light;
 	}
+
+
+
+
+
+
+	//PUBLIC
+
+	public void InitializeNetworkLevelLoad(string level)
+	{
+		networkView.RPC( "LoadLevel", RPCMode.AllBuffered, level, m_LastLevelPrefix + 1);
+	}
+
 	/// <summary>
 	/// Shows the message on the GUI.
 	/// </summary>
@@ -288,6 +231,7 @@ public class GameManager : MonoBehaviour
 		}
 		return matrix;
 	}
+
 	/// <summary>
 	/// Gets the inner zone with global world coordinates.
 	/// </summary>
@@ -311,11 +255,109 @@ public class GameManager : MonoBehaviour
 			return this.m_MapZones[Mathf.FloorToInt(p_WorldX/20),Mathf.FloorToInt(p_WorldY/20)].m_InnerZones[p_WorldX%20,p_WorldY%20];
 		}
 	}
+
 	public void setInnerZone(int p_WorldX,int p_WorldY,GameObject p_Object)
 	{
 		this.m_MapZones[Mathf.FloorToInt(p_WorldX/20),Mathf.FloorToInt(p_WorldY/20)].m_InnerZones[p_WorldX%20,p_WorldY%20]=p_Object;
 	}
-	
+
+	//Private
+
+	/// <summary>
+	/// Spawn a new Zombie
+	/// </summary>
+	private void SpawnZombie()
+	{
+			this.m_Threat-=ZOMBIE_SPAWN_COST;
+			Vector3 pos; 
+			bool valid;
+			int tries = 0;
+			do
+			{//Tries to find a valid location away from players (10 tries).
+				pos = new Vector3 (Random.value*100,0.66f,Random.value*100);
+				valid = true;
+				foreach(NetworkManager.PlayerInfos pi in EV.networkManager.m_PlayerInfos.Values)
+				{
+					//valid&=(pi.m_PlayerMotor.transform.position-pos).magnitude>ZOMBIE_SPAWN_PERIMETER;
+					Transform playTrans = pi.m_PlayerMotor.transform;
+					float angle =Mathf.Abs(Vector3.Angle(playTrans.TransformDirection(Vector3.forward),playTrans.position-pos));
+					valid&=angle>PLAYER_VIEW_ANGLE;
+					valid&=ZOMBIE_SPAWN_MIN_DISTANCE<=Vector3.Distance(playTrans.position,pos);
+				}
+				tries++;
+			}while(!valid&&tries<ZOMBIE_POS_TRIES);
+			
+			if(tries<=ZOMBIE_POS_TRIES)
+			{
+				Network.Instantiate(m_StandardZombiePrefab,pos,Quaternion.identity,0);
+				this.m_ZombieCount++;
+			}
+			else
+			{
+				Debug.LogWarning("Zombie Spawn Failed after "+ZOMBIE_POS_TRIES+" retries.");
+			}
+	}
+
+	/// <summary>
+	/// Simulate the Day-Light Cycle for a frame
+	/// </summary>
+	private void DayLightCycle()
+	{
+		if(this.m_Sun!=null)
+		{
+			//DayLight 
+			float dayTime = ((Time.time-this.m_StartTime)%this.m_DayLightCycleTime)/this.m_DayLightCycleTime;
+			this.m_Sun.transform.rotation=Quaternion.Euler(360*dayTime,0f,0f);
+			for(int i = 0;i<this.m_DayTimes.Length;i++)
+			{
+				if(dayTime<this.m_DayTimes[i])
+				{
+					Color To;
+					if(i==this.m_DayTimes.Length-1){To=this.m_DayColors[0];}else{To=this.m_DayColors[i+1];}
+					Color result = Color.Lerp(this.m_DayColors[i],To,dayTime/this.m_DayTimes[i]);
+					this.m_Sun.color = result;
+					this.m_Sun.intensity=result.grayscale/3;
+					RenderSettings.ambientLight=Color.Lerp(result,Color.black,0.5f);
+					RenderSettings.fogColor=Color.Lerp(result,Color.black,0.8f);
+					RenderSettings.skybox.SetColor("_Tint",Color.Lerp(result,Color.black,0.2f));
+					i=this.m_DayTimes.Length;
+				}
+				else
+				{
+					dayTime-=this.m_DayTimes[i];
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Test if condidition for a new zombie are met	/// </summary>
+	/// <returns><c>true</c>, if they are met, <c>false</c> otherwise.</returns>
+	private bool ZombieCanSpawn()
+	{
+		return this.m_Threat >= ZOMBIE_SPAWN_COST && this.m_ZombieCount < this.m_MaxZombies;
+	}
+
+	/// <summary>
+	/// Remove messages from console where requirements are met.
+	/// </summary>
+	private void FlushValidConsoleMessages()
+	{
+		//Delete Messages at expiration
+		if(!this.m_KeepAllMessages)
+		{
+			if(Time.time>this.m_MessageExpiration&&this.m_MessageList.Count>0)
+			{
+				this.m_MessageList.RemoveAt(0);
+				this.m_MessageExpiration=Time.time+(3/(this.m_MessageList.Count+1));
+			}
+		}
+	}
+
+
+
+
+
 	//Remote Procedure Calls
 	[RPC]
 	void LoadLevel (string level, int levelPrefix)
